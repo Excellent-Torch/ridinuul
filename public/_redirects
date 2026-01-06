@@ -1,2 +1,2 @@
-# Handle SPA routing - all routes go to index.html
-/* /index.html 200
+# Handle SPA routing - serve index.html for all non-file routes
+/*  /index.html  200!
