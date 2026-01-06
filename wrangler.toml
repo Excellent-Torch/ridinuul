@@ -1,6 +1,10 @@
-{
-  "name": "ridinuul-website",
-  "version": "1.0.0",
-  "compatibility_date": "2024-01-01",
-  "compatibility_flags": ["nodejs_compat"]
-}
+name = "ridinuul-website"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# For Cloudflare Pages Functions
+# No main entry is needed; functions live in /functions
+
+# If you use Pages preview locally with `wrangler pages dev` and a custom output
+# directory, set it here (defaults to dist for Vite build)
+# pages_build_output_dir = "dist"
