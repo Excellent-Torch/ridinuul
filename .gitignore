@@ -4,6 +4,19 @@ node_modules
 # Output directory
 dist
 
+# Local environment files
+.env
+.env.*
+.dev.vars
+
+# Cloudflare
+.wrangler
+
+# Editor files
+.DS_Store
+.idea
+.vscode
+
 # @vitjs/vit temporary directory
 .vit
 
