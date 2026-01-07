@@ -3,6 +3,7 @@ import { ShoppingCart, Search, Menu, X, Plus, Minus, Trash2 } from 'lucide-react
 import { getProducts, getProductsByCategory, searchProducts, urlFor } from './lib/sanity';
 import { initiatePayment } from './lib/payhere';
 import type { Product, CartItem } from './types';
+import { Button } from "@/components/ui/button"
 
 const CATEGORIES = [
   { label: 'All', value: 'all' },
@@ -134,7 +135,7 @@ function App() {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-8">
               {CATEGORIES.map((category) => (
-                <button
+                <Button
                   key={category.value}
                   onClick={() => setSelectedCategory(category.value)}
                   className={`px-3 py-2 text-sm font-medium transition-colors ${
@@ -144,7 +145,7 @@ function App() {
                   }`}
                 >
                   {category.label}
-                </button>
+                </Button>
               ))}
             </nav>
 
@@ -238,7 +239,7 @@ function App() {
           </p>
         </div>
       </section>
-
+          
       {/* Products Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {isLoading ? (
