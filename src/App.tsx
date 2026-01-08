@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter
 import { Separator } from '@/components/ui/separator';
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 
-const CATEGORIES = ['All', 'Shirts', 'Dresses', 'Tops', 'Skirts', 'Pants'];
+const CATEGORIES = ['All', 'Dresses', 'Tops', 'Skirts'];
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', minimumFractionDigits: 0 }).format(price);
@@ -214,11 +214,25 @@ function App() {
       {/* Hero Section with scroll effect */}
       <motion.section
         style={{ scale: heroScale, rotate: heroRotate }}
-        className="sticky top-0 z-10 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground py-16 text-center"
+        className="sticky top-0 z-10 bg-black text-primary-foreground py-0 text-center h-[60vh] flex items-center justify-center overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Handcrafted with Love</h2>
-          <p className="text-xl opacity-90 max-w-2xl mx-auto">Discover our collection of unique, handmade clothing pieces crafted with care and tradition.</p>
+        {/* Background video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          src="/hero.mp4"
+        />
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/40 z-10" />
+        {/* Content */}
+        <div className="relative z-20 max-w-3xl mx-auto px-4 flex flex-col items-center justify-center h-full">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">Discover Unique, Handmade Clothing</h2>
+          <p className="text-xl opacity-90 max-w-2xl mx-auto drop-shadow-md">
+            Explore our curated collection of artisan-crafted pieces, made with care and tradition.
+          </p>
         </div>
       </motion.section>
 
@@ -260,14 +274,14 @@ function App() {
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-muted-foreground text-sm">
-              <li>Email: info@handmadethreads.lk</li>
-              <li>Phone: +94 77 123 4567</li>
-              <li>Colombo, Sri Lanka</li>
+              <li>Email: contact@ridinuul.com</li>
+              <li>Phone: +94 71 237 6114</li>
+              <li>Kotikwatta, Sri Lanka</li>
             </ul>
           </div>
         </div>
         <Separator className="my-8 max-w-7xl mx-auto" />
-        <p className="text-center text-muted-foreground">&copy; 2026 Handmade Threads. All rights reserved.</p>
+        <p className="text-center text-muted-foreground">&copy; 2026 ridinuul.com All rights reserved.</p>
       </motion.footer>
     </div>
   );
