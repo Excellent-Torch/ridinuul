@@ -9,9 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 
 const CATEGORIES = ['All', 'Shirts', 'Dresses', 'Tops', 'Skirts', 'Pants'];
+
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', minimumFractionDigits: 0 }).format(price);
 
@@ -23,6 +24,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cartAnimation, setCartAnimation] = useState(false);
+  const cartSheetRef = useRef<HTMLButtonElement>(null);
 
   // Scroll animation setup
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,6 +40,8 @@ function App() {
   const footerRotate = useTransform(scrollYProgress, [0.66, 1], [3, 0]);
 
   useEffect(() => { fetchProducts(); }, [selectedCategory]);
+
+  
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -64,12 +69,19 @@ function App() {
     }
   };
 
-  const addToCart = (product: Product) => setCart(prev => {
-    const existing = prev.find(item => item._id === product._id);
-    return existing
-      ? prev.map(item => item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item)
-      : [...prev, { ...product, quantity: 1 }];
-  });
+ const addToCart = (product: Product) => {
+    setCart(prev => {
+      const existing = prev.find(item => item._id === product._id);
+      return existing
+        ? prev.map(item => item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...prev, { ...product, quantity: 1 }];
+    });
+    setCartAnimation(true);
+    setTimeout(() => setCartAnimation(false), 600);
+    setTimeout(() => {
+      cartSheetRef.current?.click();
+    }, 100); // Open cart after add
+  };
 
   const updateQuantity = (id: string, delta: number) =>
     setCart(prev => prev.map(item => item._id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item).filter(item => item.quantity > 0));
@@ -110,9 +122,28 @@ function App() {
                 <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="pl-10 w-64" />
               </div>
             </form>
-            <Sheet>
+              <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button
+                  ref={cartSheetRef}
+                  variant="ghost"
+                  size="icon"
+                  className={`relative ${cartAnimation ? 'animate-bounce' : ''}`}
+                  aria-label="Open cart"
+                >
+                  <AnimatePresence>
+                    {cartAnimation && (
+                      <motion.div
+                        initial={{ scale: 1, opacity: 1 }}
+                        animate={{ scale: 1.3, opacity: 1 }}
+                        exit={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 z-10"
+                      >
+                        <ShoppingCart className="h-5 w-5 text-primary" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   <ShoppingCart className="h-5 w-5" />
                   {cartCount > 0 && <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">{cartCount}</Badge>}
                 </Button>
@@ -215,7 +246,7 @@ function App() {
       >
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <img src="/logo.svg" alt="Handmade Threads Logo" className="h-10 w-10 mb-2" />
+            <img src="/logo.png" alt="Handmade Threads Logo" className="h-10 w-10 mb-2" />
             <p className="text-muted-foreground">Every piece is crafted with care, bringing traditional craftsmanship to your wardrobe.</p>
           </div>
           <div>
