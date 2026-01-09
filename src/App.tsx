@@ -11,7 +11,28 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter
 import { Separator } from '@/components/ui/separator';
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 import TextAnimation from '@/components/ui/scroll-text';
-import GitHubButton from '@/components/ui/GitHubButton';
+import { Colors, Liquid } from '@/components/ui/liquid-gradient';
+
+const LOGO_COLORS: Colors = {
+  color1: '#cacacaff',
+  color2: '#f1f1f1ff',
+  color3: '#e7e6e6ff',
+  color4: '#FCFCFE',
+  color5: '#F9F9FD',
+  color6: '#F5E6D3',
+  color7: '#dbdbdbff',
+  color8: '#e4ddd5ff',
+  color9: '#c4c2bfff',
+  color10: '#f0ebe5ff',
+  color11: '#b4b4b4ff',
+  color12: '#fdf9f5ff',
+  color13: '#fdfdfdff',
+  color14: '#fdfdfdff',
+  color15: '#ebe8e6ff',
+  color16: '#c2c2c2ff',
+  color17: '#dad3ccff',
+};
+
 
 const CATEGORIES = ['All', 'Dresses', 'Tops', 'Skirts'];
 
@@ -29,6 +50,7 @@ function App() {
   const [cartAnimation, setCartAnimation] = useState(false);
   const cartSheetRef = useRef<HTMLButtonElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [logoHovered, setLogoHovered] = useState(false);
 
   // Scroll animation setup
   const containerRef = useRef<HTMLDivElement>(null);
@@ -113,10 +135,23 @@ function App() {
       {/* Header */}
       <header className="bg-card shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <a href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Handmade Threads Logo" className="h-20 w-20" />
-            <span className="sr-only">Handmade Threads</span>
-          </a>
+          <a
+            href="/"
+            className="relative flex items-center gap-2 p-2 rounded-lg overflow-hidden"
+            onMouseEnter={() => setLogoHovered(true)}
+            onMouseLeave={() => setLogoHovered(false)}
+          >
+            {/* Aura/Shadow effect */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="absolute h-25 w-25 rounded-full bg-gradient-to-br from-yellow-200 via-yellow-100 to-transparent blur-2xl opacity-60 animate-pulse" />
+            </div>
+            {/* Liquid gradient background */}
+            <div className="absolute inset-0 opacity-30">
+              <Liquid isHovered={logoHovered} colors={LOGO_COLORS} />
+            </div>
+              <img src="/logo.png" alt="Handmade Threads Logo" className="relative z-10 h-12 w-12 drop-shadow-[0_4px_32px_rgba(212,165,116,0.45)]" />
+              <span className="sr-only">Handmade Threads</span>
+            </a>
           <nav className="hidden md:flex gap-2">
             {CATEGORIES.map(cat => (
               <Button key={cat} variant={selectedCategory === cat.toLowerCase() ? 'default' : 'ghost'} onClick={() => selectCategory(cat.toLowerCase())}>
