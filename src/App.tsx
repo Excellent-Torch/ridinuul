@@ -10,6 +10,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
+import TextAnimation from '@/components/ui/scroll-text';
+import GitHubButton from '@/components/ui/GitHubButton';
 
 const CATEGORIES = ['All', 'Dresses', 'Tops', 'Skirts'];
 
@@ -26,6 +28,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [cartAnimation, setCartAnimation] = useState(false);
   const cartSheetRef = useRef<HTMLButtonElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Scroll animation setup
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +43,13 @@ function App() {
   const footerRotate = useTransform(scrollYProgress, [0.66, 1], [3, 0]);
 
   useEffect(() => { fetchProducts(); }, [selectedCategory]);
-
+  useEffect(() => {
+      // Set isMobile on mount and on resize
+      const checkMobile = () => setIsMobile(window.innerWidth < 640);
+      checkMobile();
+      window.addEventListener("resize", checkMobile);
+      return () => window.removeEventListener("resize", checkMobile);
+    }, []);
   
 
   const fetchProducts = async () => {
@@ -229,26 +238,71 @@ function App() {
         <div className="absolute inset-0 bg-black/40 z-10" />
         {/* Content */}
         <div className="relative z-20 max-w-3xl mx-auto px-4 flex flex-col items-center justify-center h-full">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">Discover Unique, Handmade Clothing</h2>
+          <TextAnimation
+            text="Discover Unique, Handmade Clothing"
+            variants={{
+              hidden: { filter: 'blur(10px)', opacity: 0, y: 20 },
+              visible: {
+              filter: 'blur(0px)',
+              opacity: 1,
+              y: 0,
+              transition: { ease: 'linear', duration: 0.5},
+            },
+            }}
+            classname="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg text-white normal-case"
+          />
+        
           <p className="text-xl opacity-90 max-w-2xl mx-auto drop-shadow-md">
             Explore our curated collection of artisan-crafted pieces, made with care and tradition.
           </p>
         </div>
       </motion.section>
 
-      {/* Products Section with scroll effect */}
+       {/* Products Section with scroll effect */}
       <motion.main
         style={{ scale: productsScale, rotate: productsRotate }}
         className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       >
-        {isLoading && <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" /></div>}
-        {error && <div className="text-center py-12"><p className="text-destructive mb-4">{error}</p><Button onClick={fetchProducts}>Try Again</Button></div>}
-        {!isLoading && !error && products.length === 0 && <p className="text-center py-12 text-muted-foreground text-lg">No products found.</p>}
         {!isLoading && !error && products.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map(product => (
-              <ProductCard key={product._id} product={product} onAddToCart={addToCart} />
-            ))}
+            {products.map((product, idx) => {
+              const delay = isMobile ? 0 : idx * 0.08;
+              return (
+                <motion.div
+                  key={product._id}
+                  initial={{ opacity: 0, y: 40, scale: 0.95, rotate: (idx % 2 === 0 ? -3 : 3) }}
+                  whileInView={{
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    rotate: 0,
+                    transition: {
+                      delay,
+                      duration: 0.7,
+                      type: "spring",
+                      stiffness: 80,
+                      damping: 12,
+                    },
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: 40,
+                    scale: 0.95,
+                    rotate: (idx % 2 === 0 ? -3 : 3),
+                    transition: {
+                      delay,
+                      duration: 0.7,
+                      type: "spring",
+                      stiffness: 80,
+                      damping: 12,
+                    },
+                  }}
+                  viewport={{ once: false, amount: 0.2 }}
+                >
+                  <ProductCard product={product} onAddToCart={addToCart} />
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </motion.main>
@@ -276,7 +330,7 @@ function App() {
             <ul className="space-y-2 text-muted-foreground text-sm">
               <li>Email: contact@ridinuul.com</li>
               <li>Phone: +94 71 237 6114</li>
-              <li>Kotikwatta, Sri Lanka</li>
+              <li>Address: Kotikwatta, Sri Lanka</li>
             </ul>
           </div>
         </div>
