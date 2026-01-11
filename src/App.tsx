@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Search, Menu, Plus, Minus, Trash2 } from 'lucide-react';
-import { getProducts, getProductsByCategory, searchProducts, urlFor } from './lib/sanity';
+import { getProducts, getProductsByCategory, searchProducts } from './lib/sanity';
 import { initiatePayment } from './lib/payhere';
 import type { Product, CartItem } from './types';
 import { Button } from '@/components/ui/button';
@@ -9,32 +9,23 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 import TextAnimation from '@/components/ui/scroll-text';
-import { Colors, Liquid } from '@/components/ui/liquid-gradient';
-
-const LOGO_COLORS: Colors = {
-  color1: '#cacacaff',
-  color2: '#f1f1f1ff',
-  color3: '#e7e6e6ff',
-  color4: '#FCFCFE',
-  color5: '#F9F9FD',
-  color6: '#F5E6D3',
-  color7: '#dbdbdbff',
-  color8: '#e4ddd5ff',
-  color9: '#c4c2bfff',
-  color10: '#f0ebe5ff',
-  color11: '#b4b4b4ff',
-  color12: '#fdf9f5ff',
-  color13: '#fdfdfdff',
-  color14: '#fdfdfdff',
-  color15: '#ebe8e6ff',
-  color16: '#c2c2c2ff',
-  color17: '#dad3ccff',
-};
 
 
 const CATEGORIES = ['All', 'Dresses', 'Tops', 'Skirts'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const COLORS = [
+  { name: 'Black', value: '#000000' },
+  { name: 'White', value: '#FFFFFF' },
+  { name: 'Red', value: '#DC2626' },
+  { name: 'Blue', value: '#2563EB' },
+  { name: 'Green', value: '#16A34A' },
+  { name: 'Pink', value: '#EC4899' },
+  { name: 'Beige', value: '#D4A574' },
+];
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', minimumFractionDigits: 0 }).format(price);
@@ -50,7 +41,10 @@ function App() {
   const [cartAnimation, setCartAnimation] = useState(false);
   const cartSheetRef = useRef<HTMLButtonElement>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [logoHovered, setLogoHovered] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [quantity, setQuantity] = useState(1);
 
   // Scroll animation setup
   const containerRef = useRef<HTMLDivElement>(null);
@@ -100,18 +94,40 @@ function App() {
     }
   };
 
- const addToCart = (product: Product) => {
+ const addToCart = (product: Product, qty: number = 1, size?: string, color?: string) => {
+    const cartId = `${product._id}-${size || 'default'}-${color || 'default'}`;
     setCart(prev => {
-      const existing = prev.find(item => item._id === product._id);
+      const existing = prev.find(item => item._id === cartId);
       return existing
-        ? prev.map(item => item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item)
-        : [...prev, { ...product, quantity: 1 }];
+        ? prev.map(item => item._id === cartId ? { ...item, quantity: item.quantity + qty } : item)
+        : [...prev, { ...product, _id: cartId, quantity: qty, size, color }];
     });
     setCartAnimation(true);
     setTimeout(() => setCartAnimation(false), 600);
     setTimeout(() => {
       cartSheetRef.current?.click();
-    }, 100); // Open cart after add
+    }, 100);
+  };
+
+  const openProductModal = (product: Product) => {
+    setSelectedProduct(product);
+    setSelectedSize('');
+    setSelectedColor('');
+    setQuantity(1);
+  };
+
+  const closeProductModal = () => {
+    setSelectedProduct(null);
+    setSelectedSize('');
+    setSelectedColor('');
+    setQuantity(1);
+  };
+
+  const handleAddFromModal = () => {
+    if (selectedProduct) {
+      addToCart(selectedProduct, quantity, selectedSize, selectedColor);
+      closeProductModal();
+    }
   };
 
   const updateQuantity = (id: string, delta: number) =>
@@ -138,18 +154,8 @@ function App() {
           <a
             href="/"
             className="relative flex items-center gap-2 p-2 rounded-lg overflow-hidden"
-            onMouseEnter={() => setLogoHovered(true)}
-            onMouseLeave={() => setLogoHovered(false)}
           >
-            {/* Aura/Shadow effect */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="absolute h-25 w-25 rounded-full bg-gradient-to-br from-yellow-200 via-yellow-100 to-transparent blur-2xl opacity-60 animate-pulse" />
-            </div>
-            {/* Liquid gradient background */}
-            <div className="absolute inset-0 opacity-30">
-              <Liquid isHovered={logoHovered} colors={LOGO_COLORS} />
-            </div>
-              <img src="/logo.png" alt="Handmade Threads Logo" className="relative z-10 h-12 w-12 drop-shadow-[0_4px_32px_rgba(212,165,116,0.45)]" />
+              <img src="/logo.png" alt="Handmade Threads Logo" className="relative z-10 h-22 w-22 drop-shadow-[0_4px_32px_rgba(212,165,116,0.45)]" />
               <span className="sr-only">Handmade Threads</span>
             </a>
           <nav className="hidden md:flex gap-2">
@@ -207,6 +213,13 @@ function App() {
                           <img src={item.imageUrl} alt={item.name} className="w-16 h-16 object-cover rounded" />
                           <div className="flex-1">
                             <p className="font-medium line-clamp-1">{item.name}</p>
+                            {(item.size || item.color) && (
+                              <p className="text-xs text-muted-foreground">
+                                {item.size && <span>Size: {item.size}</span>}
+                                {item.size && item.color && <span> • </span>}
+                                {item.color && <span>Color: {item.color}</span>}
+                              </p>
+                            )}
                             <p className="text-primary font-semibold">{formatPrice(item.price)}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item._id, -1)}><Minus className="h-3 w-3" /></Button>
@@ -334,7 +347,7 @@ function App() {
                   }}
                   viewport={{ once: false, amount: 0.2 }}
                 >
-                  <ProductCard product={product} onAddToCart={addToCart} />
+                  <ProductCard product={product} onAddToCart={addToCart} onOpenModal={openProductModal} />
                 </motion.div>
               );
             })}
@@ -349,7 +362,7 @@ function App() {
       >
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <img src="/logo.png" alt="Handmade Threads Logo" className="h-10 w-10 mb-2" />
+            <img src="/logo.png" alt="Handmade Threads Logo" className="h-20 w-20 mb-2" />
             <p className="text-muted-foreground">Every piece is crafted with care, bringing traditional craftsmanship to your wardrobe.</p>
           </div>
           <div>
@@ -372,17 +385,130 @@ function App() {
         <Separator className="my-8 max-w-7xl mx-auto" />
         <p className="text-center text-muted-foreground">&copy; 2026 ridinuul.com All rights reserved.</p>
       </motion.footer>
+
+      {/* Product Detail Modal */}
+      <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && closeProductModal()}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedProduct && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedProduct.name}</DialogTitle>
+              </DialogHeader>
+              <div className="grid md:grid-cols-2 gap-6 mt-4">
+                {/* Product Image */}
+                <div className="relative aspect-square overflow-hidden rounded-lg">
+                  <img
+                    src={selectedProduct.imageUrl || '/placeholder.jpg'}
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {selectedProduct.inStock === false && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Badge variant="secondary" className="text-lg">Out of Stock</Badge>
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Details */}
+                <div className="space-y-4">
+                  <Badge variant="outline">{selectedProduct.category}</Badge>
+                  <p className="text-3xl font-bold text-primary">{formatPrice(selectedProduct.price)}</p>
+                  <p className="text-muted-foreground">{selectedProduct.description}</p>
+
+                  <Separator />
+
+                  {/* Size Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Size</label>
+                    <div className="flex flex-wrap gap-2">
+                      {SIZES.map(size => (
+                        <Button
+                          key={size}
+                          variant={selectedSize === size ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSelectedSize(size)}
+                          className="min-w-[3rem]"
+                        >
+                          {size}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Color Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Color</label>
+                    <div className="flex flex-wrap gap-2">
+                      {COLORS.map(color => (
+                        <button
+                          key={color.name}
+                          onClick={() => setSelectedColor(color.name)}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${
+                            selectedColor === color.name
+                              ? 'ring-2 ring-primary ring-offset-2'
+                              : 'border-muted'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
+                    {selectedColor && <p className="text-sm text-muted-foreground">Selected: {selectedColor}</p>}
+                  </div>
+
+                  {/* Quantity Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Quantity</label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        disabled={quantity <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-12 text-center text-lg font-medium">{quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setQuantity(quantity + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Add to Cart Button */}
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    disabled={selectedProduct.inStock === false}
+                    onClick={handleAddFromModal}
+                  >
+                    {selectedProduct.inStock === false ? 'Out of Stock' : `Add to Cart - ${formatPrice(selectedProduct.price * quantity)}`}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: (p: Product) => void }) {
-  const imageUrl = product.imageUrl || (product as unknown as { image?: { asset?: { _ref: string } } }).image?.asset?._ref
-    ? urlFor((product as unknown as { image: { asset: { _ref: string } } }).image).width(400).height(400).url()
-    : '/placeholder.jpg';
+function ProductCard({ product, onAddToCart, onOpenModal }: { product: Product; onAddToCart: (p: Product) => void; onOpenModal: (p: Product) => void }) {
+  const imageUrl = product.imageUrl || '/placeholder.jpg';
 
   return (
-    <Card className="overflow-hidden group">
+    <Card className="overflow-hidden group cursor-pointer" onClick={() => onOpenModal(product)}>
       <div className="relative aspect-square overflow-hidden">
         <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         {product.inStock === false && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Badge variant="secondary">Out of Stock</Badge></div>}
@@ -393,7 +519,7 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
         <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
         <div className="flex items-center justify-between mt-4">
           <span className="text-xl font-bold">{formatPrice(product.price)}</span>
-          <Button size="sm" disabled={product.inStock === false} onClick={() => onAddToCart(product)}>Add to Cart</Button>
+          <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}>Quick Add</Button>
         </div>
       </CardContent>
     </Card>

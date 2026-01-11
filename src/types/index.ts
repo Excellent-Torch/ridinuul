@@ -10,6 +10,8 @@ export interface Product {
 
 export interface CartItem extends Product {
   quantity: number;
+  size?: string;
+  color?: string;
 }
 
 export interface PaymentDetails {
