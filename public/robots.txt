@@ -1,0 +1,12 @@
+# robots.txt for ridinuul.com
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://ridinuul.com/sitemap.xml
+
+# Crawl-delay (optional, be kind to crawlers)
+Crawl-delay: 1
+
+# Disallow admin/api paths
+Disallow: /api/
