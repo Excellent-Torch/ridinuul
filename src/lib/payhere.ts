@@ -223,3 +223,6 @@ export const checkPaymentStatus = async (orderId: string): Promise<unknown> => {
 
   return response.json();
 };
+
+// Policy links helper (PayHere policy samples format)
+export { getPolicyLinks, getPolicyMap } from './policies';

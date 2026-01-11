@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ShoppingCart, Search, Menu, Plus, Minus, Trash2, Loader2 } from 'lucide-react';
 import { getProducts, getProductsByCategory, searchProducts } from './lib/sanity';
-import { initiatePayment } from './lib/payhere';
+import { initiatePayment, getPolicyLinks } from './lib/payhere';
 import { recolorClothing, type LoadingStatus } from './lib/clothing-recolor';
 import type { Product, CartItem } from './types';
 import { Button } from '@/components/ui/button';
@@ -383,7 +383,7 @@ function App() {
         style={{ scale: footerScale, rotate: footerRotate }}
         className="relative z-30 bg-card border-t py-12"
       >
-        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <img src="/logo.png" alt="Handmade Threads Logo" className="h-20 w-20 mb-2" />
             <p className="text-muted-foreground">Every piece is crafted with care, bringing traditional craftsmanship to your wardrobe.</p>
@@ -393,6 +393,14 @@ function App() {
             <ul className="space-y-2">
               {CATEGORIES.slice(1).map(cat => (
                 <li key={cat}><Button variant="link" className="p-0 h-auto text-muted-foreground" onClick={() => { selectCategory(cat.toLowerCase()); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{cat}</Button></li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-4">Policies</h4>
+            <ul className="space-y-2">
+              {getPolicyLinks().map(policy => (
+                <li key={policy.type}><a href={policy.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-sm">{policy.title}</a></li>
               ))}
             </ul>
           </div>
