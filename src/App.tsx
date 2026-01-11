@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Search, Menu, Plus, Minus, Trash2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { ShoppingCart, Search, Menu, Plus, Minus, Trash2, Loader2 } from 'lucide-react';
 import { getProducts, getProductsByCategory, searchProducts } from './lib/sanity';
 import { initiatePayment } from './lib/payhere';
+import { recolorClothing, type LoadingStatus } from './lib/clothing-recolor';
 import type { Product, CartItem } from './types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +46,8 @@ function App() {
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
+  const [recoloredImage, setRecoloredImage] = useState<string | null>(null);
+  const [recolorStatus, setRecolorStatus] = useState<LoadingStatus>('idle');
 
   // Scroll animation setup
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,6 +117,8 @@ function App() {
     setSelectedSize('');
     setSelectedColor('');
     setQuantity(1);
+    setRecoloredImage(null);
+    setRecolorStatus('idle');
   };
 
   const closeProductModal = () => {
@@ -121,7 +126,25 @@ function App() {
     setSelectedSize('');
     setSelectedColor('');
     setQuantity(1);
+    setRecoloredImage(null);
+    setRecolorStatus('idle');
   };
+
+  const handleColorSelect = useCallback(async (colorName: string, colorValue: string) => {
+    setSelectedColor(colorName);
+    if (!selectedProduct?.imageUrl) return;
+    
+    try {
+      const recolored = await recolorClothing(
+        selectedProduct.imageUrl,
+        colorValue,
+        setRecolorStatus
+      );
+      setRecoloredImage(recolored);
+    } catch {
+      setRecoloredImage(null);
+    }
+  }, [selectedProduct]);
 
   const handleAddFromModal = () => {
     if (selectedProduct) {
@@ -402,10 +425,18 @@ function App() {
                 {/* Product Image */}
                 <div className="relative aspect-square overflow-hidden rounded-lg">
                   <img
-                    src={selectedProduct.imageUrl || '/placeholder.jpg'}
+                    src={recoloredImage || selectedProduct.imageUrl || '/placeholder.jpg'}
                     alt={selectedProduct.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-opacity duration-300"
                   />
+                  {(recolorStatus === 'loading' || recolorStatus === 'processing') && (
+                    <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-white" />
+                      <span className="text-white text-sm">
+                        {recolorStatus === 'loading' ? 'Loading AI model...' : 'Applying color...'}
+                      </span>
+                    </div>
+                  )}
                   {selectedProduct.inStock === false && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <Badge variant="secondary" className="text-lg">Out of Stock</Badge>
@@ -441,16 +472,17 @@ function App() {
 
                   {/* Color Selection */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Color</label>
+                    <label className="text-sm font-medium">Color {recolorStatus === 'loading' && '(Loading AI...)'}</label>
                     <div className="flex flex-wrap gap-2">
                       {COLORS.map(color => (
                         <button
                           key={color.name}
-                          onClick={() => setSelectedColor(color.name)}
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${
+                          onClick={() => handleColorSelect(color.name, color.value)}
+                          disabled={recolorStatus === 'loading' || recolorStatus === 'processing'}
+                          className={`w-8 h-8 rounded-full border-2 transition-all disabled:opacity-50 ${
                             selectedColor === color.name
                               ? 'ring-2 ring-primary ring-offset-2'
-                              : 'border-muted'
+                              : 'border-muted hover:scale-110'
                           }`}
                           style={{ backgroundColor: color.value }}
                           title={color.name}
