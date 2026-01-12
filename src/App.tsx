@@ -409,7 +409,7 @@ function App() {
             <ul className="space-y-2 text-muted-foreground text-sm">
               <li>Email: contact@ridinuul.com</li>
               <li>Phone: +94 71 237 6114</li>
-              <li>Address: Kotikwatta, Sri Lanka</li>
+              <li>Address: 2/5 Maharagewatha Delgahawatha, Angoda, Kotikwatta, Sri Lanka</li>
             </ul>
           </div>
         </div>
