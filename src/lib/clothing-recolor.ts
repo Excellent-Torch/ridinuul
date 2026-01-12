@@ -4,7 +4,7 @@ export type LoadingStatus = 'idle' | 'loading' | 'ready' | 'processing' | 'error
 // For production: https://your-vps-ip:8000 or your domain
 // TEMP: Using environment variable for easy switching
 const RECOLOR_API_URL = import.meta.env.VITE_RECOLOR_API_URL 
-//|| 'http://localhost:8000';
+//|| 'http://localhost:8000'; Uhm
 /**
  * Check if the recolor API server is available
  */
