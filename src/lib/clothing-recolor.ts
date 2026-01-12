@@ -1,6 +1,5 @@
 export type LoadingStatus = 'idle' | 'loading' | 'ready' | 'processing' | 'error';
 
-// Configuration - set this to your server URL
 // For local development: http://localhost:8000
 // For production: https://your-vps-ip:8000 or your domain
 const RECOLOR_API_URL = import.meta.env.VITE_RECOLOR_API_URL || 'http://localhost:8000';
