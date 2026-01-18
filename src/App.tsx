@@ -11,9 +11,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import ElectricBorder from '@/components/ElectricBorder';
 
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 import TextAnimation from '@/components/ui/scroll-text';
+import RotatingText from '@/components/RotatingText';
 
 
 const CATEGORIES = ['All', 'Dresses', 'Tops', 'Skirts'];
@@ -309,19 +311,33 @@ function App() {
         <div className="absolute inset-0 bg-black/40 z-10" />
         {/* Content */}
         <div className="relative z-20 max-w-3xl mx-auto px-4 flex flex-col items-center justify-center h-full">
-          <TextAnimation
-            text="Discover Unique, Handmade Clothing"
-            variants={{
-              hidden: { filter: 'blur(10px)', opacity: 0, y: 20 },
-              visible: {
-              filter: 'blur(0px)',
-              opacity: 1,
-              y: 0,
-              transition: { ease: 'linear', duration: 0.5},
-            },
-            }}
-            classname="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg text-white normal-case"
-          />
+          <div className="flex flex-wrap items-center justify-center gap-2 text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg text-white">
+            <TextAnimation
+              text="Discover Unique, Handmade"
+              variants={{
+                hidden: { filter: 'blur(10px)', opacity: 0, y: 20 },
+                visible: {
+                  filter: 'blur(0px)',
+                  opacity: 1,
+                  y: 0,
+                  transition: { ease: 'linear', duration: 0.5 },
+                },
+              }}
+              classname="font-bold drop-shadow-lg normal-case text-white"
+            />
+            <RotatingText
+              texts={['Dresses', 'Tops', 'Skirts']}
+              mainClassName="px-2 sm:px-2 md:px-3 bg-primary text-primary-foreground overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg"
+              staggerFrom="last"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "-120%" }}
+              staggerDuration={0.025}
+              splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
+              transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              rotationInterval={2000}
+            />
+          </div>
         
           <p className="text-xl opacity-90 max-w-2xl mx-auto drop-shadow-md">
             Explore our curated collection of artisan-crafted pieces, made with care and tradition.
@@ -548,21 +564,29 @@ function ProductCard({ product, onAddToCart, onOpenModal }: { product: Product; 
   const imageUrl = product.imageUrl || '/placeholder.jpg';
 
   return (
-    <Card className="overflow-hidden group cursor-pointer" onClick={() => onOpenModal(product)}>
-      <div className="relative aspect-square overflow-hidden">
-        <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        {product.inStock === false && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Badge variant="secondary">Out of Stock</Badge></div>}
-      </div>
-      <CardContent className="p-4">
-        <Badge variant="outline" className="mb-2">{product.category}</Badge>
-        <h3 className="font-semibold line-clamp-1">{product.name}</h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
-        <div className="flex items-center justify-between mt-4">
-          <span className="text-xl font-bold">{formatPrice(product.price)}</span>
-          <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}>Quick Add</Button>
+    <ElectricBorder
+     color="#000000c9"
+    speed={0.15}
+    chaos={0.06}
+
+    style={{ borderRadius: 8 }}
+    >
+      <Card className="overflow-hidden group cursor-pointer" onClick={() => onOpenModal(product)}>
+        <div className="relative aspect-square overflow-hidden">
+          <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          {product.inStock === false && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Badge variant="secondary">Out of Stock</Badge></div>}
         </div>
-      </CardContent>
-    </Card>
+        <CardContent className="p-4">
+          <Badge variant="outline" className="mb-2">{product.category}</Badge>
+          <h3 className="font-semibold line-clamp-1">{product.name}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-xl font-bold">{formatPrice(product.price)}</span>
+            <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}>Quick Add</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </ElectricBorder>
   );
 }
 
