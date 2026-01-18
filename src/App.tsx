@@ -7,11 +7,13 @@ import type { Product, CartItem } from './types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import ElectricBorder from '@/components/ElectricBorder';
+import { MagicCard } from "@/components/ui/magic-card";
+import { Marquee } from "@/components/ui/marquee";
+
 
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 import TextAnimation from '@/components/ui/scroll-text';
@@ -28,6 +30,17 @@ const COLORS = [
   { name: 'Green', value: '#16A34A' },
   { name: 'Pink', value: '#EC4899' },
   { name: 'Beige', value: '#D4A574' },
+];
+
+const REVIEWS = [
+  { name: 'Ayesha M.', review: 'Absolutely love my new dress! The craftsmanship is exceptional and it fits perfectly.', rating: 5 },
+  { name: 'Priya S.', review: 'Beautiful handmade tops. You can really feel the quality and attention to detail.', rating: 5 },
+  { name: 'Nimali K.', review: 'Fast delivery and the skirt exceeded my expectations. Will definitely order again!', rating: 5 },
+  { name: 'Dilini R.', review: 'The colors are vibrant and true to the photos. Amazing quality for the price.', rating: 4 },
+  { name: 'Sachini W.', review: 'I get so many compliments when I wear my dress from here. Highly recommend!', rating: 5 },
+  { name: 'Rashmi P.', review: 'Traditional designs with a modern twist. Perfect for any occasion.', rating: 5 },
+  { name: 'Tharushi L.', review: 'The fabric quality is outstanding. Very comfortable to wear all day.', rating: 4 },
+  { name: 'Kavindi J.', review: 'Love supporting local artisans. These pieces are truly unique and beautiful.', rating: 5 },
 ];
 
 const formatPrice = (price: number) =>
@@ -345,6 +358,24 @@ function App() {
         </div>
       </motion.section>
 
+      {/* Customer Reviews Section */}
+      <section className="relative z-20 bg-background py-12 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 mb-8">
+          <h2 className="text-3xl font-bold text-center mb-2">What Our Customers Say</h2>
+          <p className="text-muted-foreground text-center">Real reviews from our happy customers</p>
+        </div>
+        <Marquee pauseOnHover className="[--duration:30s]">
+          {REVIEWS.map((review) => (
+            <ReviewCard key={review.name} {...review} />
+          ))}
+        </Marquee>
+        <Marquee pauseOnHover reverse className="[--duration:30s] mt-4">
+          {REVIEWS.slice().reverse().map((review) => (
+            <ReviewCard key={review.name + '-reverse'} {...review} />
+          ))}
+        </Marquee>
+      </section>
+
        {/* Products Section with scroll effect */}
       <motion.main
         style={{ scale: productsScale, rotate: productsRotate }}
@@ -564,29 +595,42 @@ function ProductCard({ product, onAddToCart, onOpenModal }: { product: Product; 
   const imageUrl = product.imageUrl || '/placeholder.jpg';
 
   return (
-    <ElectricBorder
-     color="#000000c9"
-    speed={0.15}
-    chaos={0.06}
-
-    style={{ borderRadius: 8 }}
-    >
-      <Card className="overflow-hidden group cursor-pointer" onClick={() => onOpenModal(product)}>
-        <div className="relative aspect-square overflow-hidden">
-          <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          {product.inStock === false && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Badge variant="secondary">Out of Stock</Badge></div>}
+    <MagicCard className="overflow-hidden group cursor-pointer" onClick={() => onOpenModal(product)}>
+      <div className="relative aspect-square overflow-hidden">
+        <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        {product.inStock === false && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Badge variant="secondary">Out of Stock</Badge></div>}
+      </div>
+      <CardContent className="p-4">
+        <Badge variant="outline" className="mb-2">{product.category}</Badge>
+        <h3 className="font-semibold line-clamp-1">{product.name}</h3>
+        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
+        <div className="flex items-center justify-between mt-4">
+          <span className="text-xl font-bold">{formatPrice(product.price)}</span>
+          <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}>Quick Add</Button>
         </div>
-        <CardContent className="p-4">
-          <Badge variant="outline" className="mb-2">{product.category}</Badge>
-          <h3 className="font-semibold line-clamp-1">{product.name}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
-          <div className="flex items-center justify-between mt-4">
-            <span className="text-xl font-bold">{formatPrice(product.price)}</span>
-            <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}>Quick Add</Button>
+      </CardContent>
+    </MagicCard>
+  );
+}
+
+function ReviewCard({ name, review, rating }: { name: string; review: string; rating: number }) {
+  return (
+    <div className="w-[300px] flex-shrink-0 rounded-xl border bg-card p-4 shadow-sm">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <span className="text-primary font-semibold">{name.charAt(0)}</span>
+        </div>
+        <div>
+          <p className="font-medium text-sm">{name}</p>
+          <div className="flex gap-0.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <span key={i} className={i < rating ? 'text-yellow-500' : 'text-muted-foreground/30'}>★</span>
+            ))}
           </div>
-        </CardContent>
-      </Card>
-    </ElectricBorder>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground">{review}</p>
+    </div>
   );
 }
 
