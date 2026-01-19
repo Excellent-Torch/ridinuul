@@ -14,7 +14,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { MagicCard } from "@/components/ui/magic-card";
 import { Marquee } from "@/components/ui/marquee";
 
-
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 import TextAnimation from '@/components/ui/scroll-text';
 import RotatingText from '@/components/RotatingText';
@@ -545,6 +544,9 @@ function App() {
                       ))}
                     </div>
                     {selectedColor && <p className="text-sm text-muted-foreground">Selected: {selectedColor}</p>}
+                    <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                      ⚠️ AI Color Preview is approximate and sometimes doesn't work at all. Final product color may vary slightly.
+                    </p>
                   </div>
 
                   {/* Quantity Selection */}
