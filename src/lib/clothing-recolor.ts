@@ -36,13 +36,59 @@ export function hexToRgb(hex: string): [number, number, number] {
 
 /**
  * Fetch an image URL and convert to Blob
+ * Uses an Image element to handle CORS-restricted images by drawing to canvas
  */
 async function fetchImageAsBlob(imageUrl: string): Promise<Blob> {
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.statusText}`);
+  // First try direct fetch (works for same-origin or CORS-enabled URLs)
+  try {
+    const response = await fetch(imageUrl, { mode: 'cors' });
+    if (response.ok) {
+      return await response.blob();
+    }
+  } catch {
+    // Direct fetch failed, fall through to canvas approach
   }
-  return await response.blob();
+
+  // Fallback: Use Image + Canvas to bypass CORS restrictions
+  // This works because images can be loaded cross-origin for display
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous'; // Request CORS-enabled fetch
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+      
+      ctx.drawImage(img, 0, 0);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to convert canvas to blob'));
+          }
+        },
+        'image/jpeg',
+        0.95
+      );
+    };
+    
+    img.onerror = () => {
+      reject(new Error(`Failed to load image: ${imageUrl}`));
+    };
+    
+    // Add cache-busting parameter to force fresh fetch for new images
+    const separator = imageUrl.includes('?') ? '&' : '?';
+    img.src = `${imageUrl}${separator}t=${Date.now()}`;
+  });
 }
 
 /**
