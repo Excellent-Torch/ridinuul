@@ -35,33 +35,22 @@ export function hexToRgb(hex: string): [number, number, number] {
 }
 
 /**
- * Fetch an image URL and convert to Blob
- * Uses an Image element to handle CORS-restricted images by drawing to canvas
+ * Fetch an image URL, resize it, and convert to Blob
+ * Always resizes to max 1024px to prevent 413 errors from large images
  */
 async function fetchImageAsBlob(imageUrl: string): Promise<Blob> {
-  // First try direct fetch (works for same-origin or CORS-enabled URLs)
-  try {
-    const response = await fetch(imageUrl, { mode: 'cors' });
-    if (response.ok) {
-      return await response.blob();
-    }
-  } catch {
-    // Direct fetch failed, fall through to canvas approach
-  }
-
-  // Fallback: Use Image + Canvas to bypass CORS restrictions
-  // This works because images can be loaded cross-origin for display
+  // Always use Image + Canvas approach to ensure resizing happens
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous'; // Request CORS-enabled fetch
 
     img.onload = () => {
-      // Resize logic: max 1024px width/height
+      // Resize logic: max 1024px width/height to prevent 413 errors
       const MAX_SIZE = 1024;
-      let { naturalWidth: w, naturalHeight: h } = img;
-      let scale = Math.min(1, MAX_SIZE / Math.max(w, h));
-      let newW = Math.round(w * scale);
-      let newH = Math.round(h * scale);
+      const { naturalWidth: w, naturalHeight: h } = img;
+      const scale = Math.min(1, MAX_SIZE / Math.max(w, h));
+      const newW = Math.round(w * scale);
+      const newH = Math.round(h * scale);
 
       const canvas = document.createElement('canvas');
       canvas.width = newW;
@@ -84,7 +73,7 @@ async function fetchImageAsBlob(imageUrl: string): Promise<Blob> {
           }
         },
         'image/jpeg',
-        0.95
+        0.85 // Slightly more compression to keep file size down
       );
     };
 
