@@ -54,20 +54,27 @@ async function fetchImageAsBlob(imageUrl: string): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous'; // Request CORS-enabled fetch
-    
+
     img.onload = () => {
+      // Resize logic: max 1024px width/height
+      const MAX_SIZE = 1024;
+      let { naturalWidth: w, naturalHeight: h } = img;
+      let scale = Math.min(1, MAX_SIZE / Math.max(w, h));
+      let newW = Math.round(w * scale);
+      let newH = Math.round(h * scale);
+
       const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      
+      canvas.width = newW;
+      canvas.height = newH;
+
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         reject(new Error('Failed to get canvas context'));
         return;
       }
-      
-      ctx.drawImage(img, 0, 0);
-      
+
+      ctx.drawImage(img, 0, 0, newW, newH);
+
       canvas.toBlob(
         (blob) => {
           if (blob) {
@@ -80,11 +87,11 @@ async function fetchImageAsBlob(imageUrl: string): Promise<Blob> {
         0.95
       );
     };
-    
+
     img.onerror = () => {
       reject(new Error(`Failed to load image: ${imageUrl}`));
     };
-    
+
     // Add cache-busting parameter to force fresh fetch for new images
     const separator = imageUrl.includes('?') ? '&' : '?';
     img.src = `${imageUrl}${separator}t=${Date.now()}`;
