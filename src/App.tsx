@@ -39,7 +39,7 @@ const REVIEWS = [
   { name: 'Sachini W.', review: 'I get so many compliments when I wear my dress from here. Highly Recommended!!', rating: 5 },
   { name: 'Rashmi P.', review: 'Traditional designs with a modern twist. Perfect for any occasion.', rating: 5 },
   { name: 'Tharushi L.', review: 'The fabric quality is outstanding. Very comfortable to wear all day :)', rating: 4 },
-  { name: 'Kavindi J.', review: 'Love supporting local artisans. These pieces are truly unique and beautiful.', rating: 5 },
+  { name: 'Kavindi J.', review: 'Love supporting local artisans. These pieces are truly unique and Beautiful!', rating: 5 },
 ];
 
 const formatPrice = (price: number) =>
