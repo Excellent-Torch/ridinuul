@@ -82,12 +82,12 @@ function App() {
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] });
 
   // Section transforms
-  const heroScale = useTransform(scrollYProgress, [0, 0.33], [1, 0.95]);
-  const heroRotate = useTransform(scrollYProgress, [0, 0.33], [0, -3]);
-  const productsScale = useTransform(scrollYProgress, [0.33, 0.66], [0.95, 1]);
-  const productsRotate = useTransform(scrollYProgress, [0.33, 0.66], [3, 0]);
-  const footerScale = useTransform(scrollYProgress, [0.66, 1], [0.95, 1]);
-  const footerRotate = useTransform(scrollYProgress, [0.66, 1], [3, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.97]);
+  const heroRotate = useTransform(scrollYProgress, [0, 0.15], [0, -1.5]);
+  const productsScale = useTransform(scrollYProgress, [0.15, 0.35], [0.97, 1]);
+  const productsRotate = useTransform(scrollYProgress, [0.15, 0.35], [1.5, 0]);
+  const footerScale = useTransform(scrollYProgress, [0.85, 1], [0.97, 1]);
+  const footerRotate = useTransform(scrollYProgress, [0.85, 1], [1.5, 0]);
 
   useEffect(() => { fetchProducts(); }, [selectedCategory]);
   useEffect(() => {
