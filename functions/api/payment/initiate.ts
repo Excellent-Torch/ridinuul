@@ -238,7 +238,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Return all payment parameters including the hash
     const paymentData = {
-      sandbox: true, // Set to false for production
+      sandbox: false, // Set to false for production
       merchant_id,
       return_url: `${origin}/payment/success`,
       cancel_url: `${origin}/payment/cancel`,
