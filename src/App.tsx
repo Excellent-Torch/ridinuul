@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { ShoppingCart, Search, Menu, Plus, Minus, Trash2, Loader2 } from 'lucide-react';
 import { getProducts, getProductsByCategory, searchProducts } from './lib/sanity';
 import { initiatePayment, getPolicyLinks } from './lib/payhere';
+import { Label } from './components/ui/label';
 import { recolorClothing, type LoadingStatus } from './lib/clothing-recolor';
 import type { Product, CartItem } from './types';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,19 @@ function App() {
   const [quantity, setQuantity] = useState(1);
   const [recoloredImage, setRecoloredImage] = useState<string | null>(null);
   const [recolorStatus, setRecolorStatus] = useState<LoadingStatus>('idle');
+  
+  // Checkout form state
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [checkoutForm, setCheckoutForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    notes: '',
+  });
 
   // Scroll animation setup
   const containerRef = useRef<HTMLDivElement>(null);
@@ -173,9 +187,40 @@ function App() {
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (cart.length === 0) return;
-    await initiatePayment(cart, cartTotal, () => setCart([]));
+    setIsCheckoutOpen(true);
+  };
+
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cart.length === 0) return;
+    
+    setIsProcessingPayment(true);
+    try {
+      await initiatePayment(cart, cartTotal, () => {
+        setCart([]);
+        setIsCheckoutOpen(false);
+        setCheckoutForm({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          address: '',
+          city: '',
+          notes: '',
+        });
+      }, checkoutForm);
+    } catch (error) {
+      console.error('Payment failed:', error);
+      alert('Payment failed. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const updateCheckoutForm = (field: string, value: string) => {
+    setCheckoutForm(prev => ({ ...prev, [field]: value }));
   };
 
   const selectCategory = (cat: string) => {
@@ -587,6 +632,148 @@ function App() {
               </div>
             </motion.div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Checkout Form Modal */}
+      <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Checkout</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleCheckoutSubmit} className="space-y-4 mt-4">
+            {/* Order Summary */}
+            <div className="bg-muted rounded-lg p-4 space-y-2">
+              <h4 className="font-semibold text-sm">Order Summary</h4>
+              {cart.map(item => (
+                <div key={item._id} className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {item.name} x{item.quantity}
+                    {item.size && <span className="ml-1">(Size: {item.size})</span>}
+                    {item.color && <span className="ml-1">(Color: {item.color})</span>}
+                  </span>
+                  <span>{formatPrice(item.price * item.quantity)}</span>
+                </div>
+              ))}
+              <Separator className="my-2" />
+              <div className="flex justify-between font-semibold">
+                <span>Total</span>
+                <span>{formatPrice(cartTotal)}</span>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Customer Information */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">First Name *</Label>
+                <Input
+                  id="first_name"
+                  value={checkoutForm.first_name}
+                  onChange={(e) => updateCheckoutForm('first_name', e.target.value)}
+                  placeholder="John"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="last_name">Last Name *</Label>
+                <Input
+                  id="last_name"
+                  value={checkoutForm.last_name}
+                  onChange={(e) => updateCheckoutForm('last_name', e.target.value)}
+                  placeholder="Doe"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={checkoutForm.email}
+                onChange={(e) => updateCheckoutForm('email', e.target.value)}
+                placeholder="john@example.com"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number *</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={checkoutForm.phone}
+                onChange={(e) => updateCheckoutForm('phone', e.target.value)}
+                placeholder="0771234567"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Address *</Label>
+              <Input
+                id="address"
+                value={checkoutForm.address}
+                onChange={(e) => updateCheckoutForm('address', e.target.value)}
+                placeholder="No. 1, Example Street"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city">City *</Label>
+              <Input
+                id="city"
+                value={checkoutForm.city}
+                onChange={(e) => updateCheckoutForm('city', e.target.value)}
+                placeholder="Colombo"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Order Notes (Optional)</Label>
+              <textarea
+                id="notes"
+                value={checkoutForm.notes}
+                onChange={(e) => updateCheckoutForm('notes', e.target.value)}
+                placeholder="Any special instructions for your order..."
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsCheckoutOpen(false)}
+                disabled={isProcessingPayment}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={isProcessingPayment}
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  `Pay ${formatPrice(cartTotal)}`
+                )}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

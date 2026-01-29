@@ -1,5 +1,7 @@
+
 // Cloudflare Pages Function - Payment Initiation
 // Generates the secure hash for PayHere Checkout API
+import type { PagesFunction } from '@cloudflare/workers-types';
 
 interface Env {
   PAYHERE_MERCHANT_ID: string;
@@ -17,6 +19,7 @@ interface PaymentRequest {
   phone: string;
   address: string;
   city: string;
+  notes?: string;
 }
 
 /**
@@ -213,6 +216,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       phone,
       address,
       city,
+      notes,
     } = body;
 
     const merchant_id = context.env.PAYHERE_MERCHANT_ID;
@@ -236,6 +240,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     const origin = new URL(context.request.url).origin;
 
+    // Include notes in items if provided
+    const itemsWithNotes = notes ? `${items} | Notes: ${notes}` : items;
+
     // Return all payment parameters including the hash
     const paymentData = {
       sandbox: false, // Set to false for production
@@ -244,7 +251,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       cancel_url: `${origin}/payment/cancel`,
       notify_url: `${origin}/api/payment/notify`,
       order_id,
-      items,
+      items: itemsWithNotes,
       amount: formattedAmount,
       currency,
       hash,

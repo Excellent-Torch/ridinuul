@@ -41,6 +41,7 @@ export interface CustomerInfo {
   phone: string;
   address: string;
   city: string;
+  notes?: string;
 }
 
 export interface PaymentNotification {

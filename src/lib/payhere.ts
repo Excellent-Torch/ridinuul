@@ -18,6 +18,7 @@ interface CustomerInfo {
   phone: string;
   address: string;
   city: string;
+  notes?: string;
 }
 
 interface InitiatePaymentResponse {
@@ -104,7 +105,12 @@ const getPaymentDetails = async (
   customerInfo: CustomerInfo
 ): Promise<InitiatePaymentResponse> => {
   const orderId = generateOrderId();
-  const items = cart.map((item) => `${item.name} x${item.quantity}`).join(', ');
+  const items = cart.map((item) => {
+    let itemStr = `${item.name} x${item.quantity}`;
+    if (item.size) itemStr += ` (Size: ${item.size})`;
+    if (item.color) itemStr += ` (Color: ${item.color})`;
+    return itemStr;
+  }).join(', ');
 
   const response = await fetch(`${getApiBaseUrl()}/api/payment/initiate`, {
     method: 'POST',
@@ -122,6 +128,7 @@ const getPaymentDetails = async (
       phone: customerInfo.phone,
       address: customerInfo.address,
       city: customerInfo.city,
+      notes: customerInfo.notes || '',
     }),
   });
 
