@@ -192,15 +192,15 @@ function App() {
     setIsCheckoutOpen(true);
   };
 
+
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return;
-    
     setIsProcessingPayment(true);
+    setIsCheckoutOpen(false); // Close form before opening PayHere
     try {
       await initiatePayment(cart, cartTotal, () => {
         setCart([]);
-        setIsCheckoutOpen(false);
         setCheckoutForm({
           first_name: '',
           last_name: '',
