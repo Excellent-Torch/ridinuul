@@ -90,7 +90,7 @@ function App() {
   const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.97]);
   const heroRotate = useTransform(scrollYProgress, [0, 0.15], [0, -1.5]);
   const productsScale = useTransform(scrollYProgress, [0.05, 0.15], [0.97, 1]);
-  const productsRotate = useTransform(scrollYProgress, [0.05, 0.10], [1.5, 0]);
+  const productsRotate = useTransform(scrollYProgress, [0.05, 0.10], [0.2, 0]);
   const footerScale = useTransform(scrollYProgress, [0.85, 1], [0.97, 1]);
   const footerRotate = useTransform(scrollYProgress, [0.85, 1], [1.5, 0]);
 
@@ -466,7 +466,7 @@ function App() {
               return (
                 <motion.div
                   key={product._id}
-                  initial={{ opacity: 0, y: 40, scale: 0.95, rotate: (idx % 2 === 0 ? -3 : 3) }}
+                  initial={{ opacity: 1, y: 40, scale: 0.95, rotate: (idx % 2 === 0 ? -3 : 3) }}
                   whileInView={{
                     opacity: 1,
                     y: 0,
