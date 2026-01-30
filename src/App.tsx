@@ -175,10 +175,14 @@ function App() {
   }, [selectedProduct]);
 
   const handleAddFromModal = () => {
-    if (selectedProduct) {
-      addToCart(selectedProduct, quantity, selectedSize, selectedColor);
-      closeProductModal();
+    if (!selectedProduct) return;
+    if (SIZES.length > 0 && !selectedSize) {
+      // Inform the user to pick a size before adding
+      alert('Please select a size before adding to cart.');
+      return;
     }
+    addToCart(selectedProduct, quantity, selectedSize, selectedColor);
+    closeProductModal();
   };
 
   const updateQuantity = (id: string, delta: number) =>
@@ -590,7 +594,7 @@ function App() {
                     </div>
                     {selectedColor && <p className="text-sm text-muted-foreground">Selected: {selectedColor}</p>}
                     <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
-                      ⚠️ AI Color Preview is approximate and sometimes doesn't work at all. Final product color may vary slightly.
+                      ⚠️ AI color previews are for Reference Only and may not always display correctly. The final product color may vary slightly.
                     </p>
                   </div>
 
@@ -623,8 +627,8 @@ function App() {
                   <Button
                     size="lg"
                     className="w-full"
-                    disabled={selectedProduct.inStock === false}
-                    onClick={handleAddFromModal}
+                                    disabled={selectedProduct.inStock === false || (SIZES.length > 0 && !selectedSize)}
+                                    onClick={handleAddFromModal}
                   >
                     {selectedProduct.inStock === false ? 'Out of Stock' : `Add to Cart - ${formatPrice(selectedProduct.price * quantity)}`}
                   </Button>
@@ -793,9 +797,9 @@ function ProductCard({ product, onAddToCart, onOpenModal }: { product: Product; 
         <Badge variant="outline" className="mb-2">{product.category}</Badge>
         <h3 className="font-semibold line-clamp-1">{product.name}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
-        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between mt-4">
           <span className="text-xl font-bold">{formatPrice(product.price)}</span>
-          <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}>Quick Add</Button>
+          <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onOpenModal(product); }}>View</Button>
         </div>
       </CardContent>
     </MagicCard>
