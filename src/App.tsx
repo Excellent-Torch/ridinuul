@@ -244,6 +244,15 @@ function App() {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-background">
+      {/* Block interactions while external payment gateway is open */}
+      {isProcessingPayment && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <div className="bg-card px-6 py-4 rounded-md flex items-center gap-3 shadow-lg">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <span className="font-medium">Opening payment gateway…</span>
+          </div>
+        </div>
+      )}
       {/* Blur overlay applied when products section is in view. Sits below products (z-20) */}
       <div
         aria-hidden
