@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { ShoppingCart, Search, Menu, Plus, Minus, Trash2, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { ShoppingCart, Search, Menu, Plus, Minus, Trash2, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
 import { getProducts, getProductsByCategory, searchProducts } from './lib/sanity';
 import { initiatePayment, getPolicyLinks } from './lib/payhere';
 import { Label } from './components/ui/label';
@@ -7,8 +7,9 @@ import { recolorClothing, type LoadingStatus } from './lib/clothing-recolor';
 import type { Product, CartItem } from './types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,6 +17,7 @@ import { MagicCard } from "@/components/ui/magic-card";
 import { Marquee } from "@/components/ui/marquee";
 
 import { AnimatePresence, motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { categorizeProducts } from './lib/utils';
 import TextAnimation from '@/components/ui/scroll-text';
 import RotatingText from '@/components/RotatingText';
 
@@ -63,6 +65,8 @@ function App() {
   const [quantity, setQuantity] = useState(1);
   const [recoloredImage, setRecoloredImage] = useState<string | null>(null);
   const [recolorStatus, setRecolorStatus] = useState<LoadingStatus>('idle');
+  const [categorizeMethod, setCategorizeMethod] = useState<'none' | 'price' | 'availability' | 'category'>('none');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   // Checkout form state
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -195,6 +199,19 @@ function App() {
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const grouped = useMemo(() => {
+    return categorizeMethod === 'none' ? null : categorizeProducts(products, categorizeMethod as any);
+  }, [products, categorizeMethod]);
+
+  const displayGroups = useMemo(() => {
+    if (!grouped) return null;
+    // Only apply numeric sorting for price grouping
+    if (categorizeMethod === 'price') {
+      return Object.fromEntries(Object.entries(grouped).map(([label, items]) => [label, [...items].sort((a: any, b: any) => (sortOrder === 'asc' ? (a.price ?? 0) - (b.price ?? 0) : (b.price ?? 0) - (a.price ?? 0)))]));
+    }
+    return grouped;
+  }, [grouped, sortOrder, categorizeMethod]);
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
@@ -460,46 +477,112 @@ function App() {
         className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       >
         {!isLoading && !error && products.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product, idx) => {
-              const delay = isMobile ? 0 : idx * 0.08;
-              return (
-                <motion.div
-                  key={product._id}
-                  initial={{ opacity: 1, y: 40, scale: 0.95, rotate: (idx % 2 === 0 ? -3 : 3) }}
-                  whileInView={{
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    rotate: 0,
-                    transition: {
-                      delay,
-                      duration: 0.7,
-                      type: "spring",
-                      stiffness: 80,
-                      damping: 12,
-                    },
-                  }}
-                  exit={{
-                    opacity: 0,
-                    y: 40,
-                    scale: 0.95,
-                    rotate: (idx % 2 === 0 ? -3 : 3),
-                    transition: {
-                      delay,
-                      duration: 0.7,
-                      type: "spring",
-                      stiffness: 80,
-                      damping: 12,
-                    },
-                  }}
-                  viewport={{ once: false, amount: 0.2 }}
+          <>
+            <Card className="mb-6">
+              <CardContent className="p-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Label className="text-sm text-black">Filter</Label>
+                  <Select value={categorizeMethod} onValueChange={(v) => setCategorizeMethod(v as any)}>
+                    <SelectTrigger className="w-36 max-w-[11rem] text-black">
+                      <SelectValue className="text-black" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="price">Price</SelectItem>
+                      {/* <SelectItem value="availability">Availability</SelectItem> */}
+                      <SelectItem value="category">Category</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {categorizeMethod === 'price' && (
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant={sortOrder === 'asc' ? 'default' : 'outline'} onClick={() => setSortOrder('asc')} className="h-8 w-8 flex-shrink-0">
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant={sortOrder === 'desc' ? 'default' : 'outline'} onClick={() => setSortOrder('desc')} className="h-8 w-8 flex-shrink-0">
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {categorizeMethod !== 'none' && (
+                    <Button variant="outline" size="sm" onClick={() => { setCategorizeMethod('none'); setSortOrder('asc'); }} className="rounded-md flex-shrink-0">Clear</Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {categorizeMethod === 'none' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product, idx) => {
+                  const delay = isMobile ? 0 : idx * 0.08;
+                  return (
+                    <motion.div
+                      key={product._id}
+                      initial={{ opacity: 1, y: 40, scale: 0.95, rotate: (idx % 2 === 0 ? -3 : 3) }}
+                      whileInView={{
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        rotate: 0,
+                        transition: {
+                          delay,
+                          duration: 0.7,
+                          type: "spring",
+                          stiffness: 80,
+                          damping: 12,
+                        },
+                      }}
+                      exit={{
+                        opacity: 0,
+                        y: 40,
+                        scale: 0.95,
+                        rotate: (idx % 2 === 0 ? -3 : 3),
+                        transition: {
+                          delay,
+                          duration: 0.7,
+                          type: "spring",
+                          stiffness: 80,
+                          damping: 12,
+                        },
+                      }}
+                      viewport={{ once: false, amount: 0.2 }}
+                    >
+                      <ProductCard product={product} onOpenModal={openProductModal} />
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              Object.entries(displayGroups || {}).map(([label, items]) => (
+                <motion.section
+                  key={label}
+                  className="mb-8"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
                 >
-                  <ProductCard product={product} onOpenModal={openProductModal} />
-                </motion.div>
-              );
-            })}
-          </div>
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 }}>
+                    <Card className="mb-3">
+                      <CardContent className="flex items-center justify-between py-3 px-4">
+                        <span className="text-lg font-semibold text-black">{label}</span>
+                        <span className="text-sm text-muted-foreground">({items.length})</span>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {items.map((product, idx) => (
+                      <motion.div key={(product as any)._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: idx * 0.04 }}>
+                        <ProductCard product={product as any} onOpenModal={openProductModal} />
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.section>
+              ))
+            )}
+          </>
         )}
       </motion.main>
 
