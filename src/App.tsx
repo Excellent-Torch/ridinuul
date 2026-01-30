@@ -230,6 +230,11 @@ function App() {
   const selectCategory = (cat: string) => {
     setSelectedCategory(cat);
     setIsMobileMenuOpen(false);
+    // Smooth-scroll to products section after category change
+    setTimeout(() => {
+      const el = document.getElementById('products');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   return (
@@ -426,6 +431,7 @@ function App() {
 
        {/* Products Section with scroll effect */}
       <motion.main
+        id="products"
         style={{ scale: productsScale, rotate: productsRotate }}
         className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       >
@@ -465,7 +471,7 @@ function App() {
                   }}
                   viewport={{ once: false, amount: 0.2 }}
                 >
-                  <ProductCard product={product} onAddToCart={addToCart} onOpenModal={openProductModal} />
+                  <ProductCard product={product} onOpenModal={openProductModal} />
                 </motion.div>
               );
             })}
@@ -784,7 +790,7 @@ function App() {
   );
 }
 
-function ProductCard({ product, onAddToCart, onOpenModal }: { product: Product; onAddToCart: (p: Product) => void; onOpenModal: (p: Product) => void }) {
+function ProductCard({ product, onOpenModal }: { product: Product; onOpenModal: (p: Product) => void }) {
   const imageUrl = product.imageUrl || '/placeholder.jpg';
 
   return (
