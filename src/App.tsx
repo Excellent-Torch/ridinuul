@@ -84,8 +84,8 @@ function App() {
   // Section transforms
   const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.97]);
   const heroRotate = useTransform(scrollYProgress, [0, 0.15], [0, -1.5]);
-  const productsScale = useTransform(scrollYProgress, [0.15, 0.35], [0.97, 1]);
-  const productsRotate = useTransform(scrollYProgress, [0.15, 0.35], [1.5, 0]);
+  const productsScale = useTransform(scrollYProgress, [0.05, 0.15], [0.97, 1]);
+  const productsRotate = useTransform(scrollYProgress, [0.05, 0.10], [1.5, 0]);
   const footerScale = useTransform(scrollYProgress, [0.85, 1], [0.97, 1]);
   const footerRotate = useTransform(scrollYProgress, [0.85, 1], [1.5, 0]);
 
@@ -510,7 +510,7 @@ function App() {
 
       {/* Product Detail Modal */}
       <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && closeProductModal()}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-md sm:max-w-3xl mx-auto max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-lg sm:rounded-xl">
           {selectedProduct && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
