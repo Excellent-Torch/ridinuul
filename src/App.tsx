@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { MagicCard } from "@/components/ui/magic-card";
 import { Marquee } from "@/components/ui/marquee";
 
-import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
+import { AnimatePresence, motion, useScroll, useTransform, useInView } from 'framer-motion';
 import TextAnimation from '@/components/ui/scroll-text';
 import RotatingText from '@/components/RotatingText';
 
@@ -80,6 +80,11 @@ function App() {
   // Scroll animation setup
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] });
+
+  // Products section ref to detect when it's in view (for background blur)
+  const productsRef = useRef<HTMLElement | null>(null);
+  // use a lower threshold so small mobile viewports trigger reliably
+  const isProductsInView = useInView(productsRef, { amount: 0.05 });
 
   // Section transforms
   const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.97]);
@@ -239,6 +244,15 @@ function App() {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-background">
+      {/* Blur overlay applied when products section is in view. Sits below products (z-20) */}
+      <div
+        aria-hidden
+        className={`fixed inset-0 pointer-events-none z-[15] transition duration-300 ${isProductsInView ? 'bg-black/5 md:bg-black/10' : 'bg-transparent'} ${isProductsInView ? 'backdrop-blur-sm md:backdrop-blur-md' : 'backdrop-blur-0'}`}
+        style={{
+          WebkitBackdropFilter: isProductsInView ? 'blur(6px)' : 'none',
+          backdropFilter: isProductsInView ? 'blur(6px)' : 'none',
+        }}
+      />
       {/* Header */}
       <header className="bg-card shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
@@ -432,6 +446,7 @@ function App() {
        {/* Products Section with scroll effect */}
       <motion.main
         id="products"
+        ref={productsRef}
         style={{ scale: productsScale, rotate: productsRotate }}
         className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
       >
