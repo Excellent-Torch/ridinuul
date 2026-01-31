@@ -20,6 +20,7 @@ import { AnimatePresence, motion, useScroll, useTransform, useInView } from 'fra
 import { categorizeProducts } from './lib/utils';
 import TextAnimation from '@/components/ui/scroll-text';
 import RotatingText from '@/components/RotatingText';
+import WhatsAppChat from './components/ui/WhatsAppChat';
 
 
 const CATEGORIES = ['All', 'Dresses', 'Tops', 'Skirts'];
@@ -893,6 +894,7 @@ function App() {
           </form>
         </DialogContent>
       </Dialog>
+      <WhatsAppChat product={selectedProduct} />
     </div>
   );
 }
