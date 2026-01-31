@@ -266,7 +266,7 @@ function App() {
       {/* Block interactions while external payment gateway is open */}
       {isProcessingPayment && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-          <div className="bg-card px-6 py-4 rounded-md flex items-center gap-3 shadow-lg">
+          <div className="bg-card px-6 py-4 rounded-md flex items-center gap-3 shadow-lg dark:shadow-[0_10px_20px_rgba(255,255,255,0.06)]">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
             <span className="font-medium">Opening payment gateway…</span>
           </div>
@@ -282,13 +282,13 @@ function App() {
         }}
       />
       {/* Header */}
-      <header className="bg-card shadow-sm sticky top-0 z-40">
+      <header className="bg-card shadow-sm dark:shadow-[0_1px_2px_rgba(255,255,255,0.04)] sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <a
             href="/"
             className="relative flex items-center gap-2 p-2 rounded-lg overflow-hidden"
           >
-              <img src="/logo.png" alt="Handmade Threads Logo" className="relative z-10 h-22 w-22 drop-shadow-[0_4px_32px_rgba(212,165,116,0.45)]" />
+              <img src="/logo.png" alt="Handmade Threads Logo" className="relative z-10 h-22 w-22 drop-shadow-[0_4px_32px_rgba(212,165,116,0.45)] dark:drop-shadow-[0_4px_32px_rgba(255,255,255,0.08)]" />
               <span className="sr-only">Handmade Threads</span>
             </a>
           <nav className="hidden md:flex gap-2">
@@ -378,28 +378,43 @@ function App() {
               </SheetContent>
             </Sheet>
             <ThemeToggle />
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-              <Menu className="h-5 w-5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`md:hidden transform transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-90 scale-105' : 'rotate-0'}`}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-expanded={isMobileMenuOpen}
+              aria-label="Toggle menu"
+            >
+              <Menu className={`h-5 w-5 transition-transform duration-200 ${isMobileMenuOpen ? 'rotate-90' : 'rotate-0'}`} />
             </Button>
           </div>
         </div>
-        {isMobileMenuOpen && (
-          <div className="md:hidden p-4 border-t space-y-4">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-white" />
-                <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="pl-10" />
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 1, height: 0, y: 0}}
+              animate={{ opacity: 1, height: 'auto', y: 0}}
+              exit={{ opacity: 0, height: 0, y: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="md:hidden p-4 border-t space-y-4 overflow-hidden"
+            >
+              <form onSubmit={handleSearch}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-white" />
+                  <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="pl-10" />
+                </div>
+              </form>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map(cat => (
+                  <Button key={cat} variant={selectedCategory === cat.toLowerCase() ? 'default' : 'secondary'} size="sm" onClick={() => selectCategory(cat.toLowerCase())}>
+                    {cat}
+                  </Button>
+                ))}
               </div>
-            </form>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map(cat => (
-                <Button key={cat} variant={selectedCategory === cat.toLowerCase() ? 'default' : 'secondary'} size="sm" onClick={() => selectCategory(cat.toLowerCase())}>
-                  {cat}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Hero Section with scroll effect */}
@@ -420,7 +435,7 @@ function App() {
         <div className="absolute inset-0 bg-black/40 z-10" />
         {/* Content */}
         <div className="relative z-20 max-w-3xl mx-auto px-4 flex flex-col items-center justify-center h-full">
-          <div className="flex flex-wrap items-center justify-center gap-2 text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg text-white">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg dark:drop-shadow-[0_10px_20px_rgba(255,255,255,0.08)] text-white">
             <TextAnimation
               text="Discover Unique, Handmade"
               variants={{
@@ -432,7 +447,7 @@ function App() {
                   transition: { ease: 'linear', duration: 0.5 },
                 },
               }}
-              classname="font-bold drop-shadow-lg normal-case text-white"
+              classname="font-bold drop-shadow-lg dark:drop-shadow-[0_10px_20px_rgba(255,255,255,0.08)] normal-case text-white"
             />
             <RotatingText
               texts={['Dresses', 'Tops', 'Skirts']}
@@ -448,7 +463,7 @@ function App() {
             />
           </div>
         
-          <p className="text-xl opacity-90 max-w-2xl mx-auto drop-shadow-md">
+          <p className="text-xl text-white opacity-90 max-w-2xl mx-auto drop-shadow-md dark:drop-shadow-[0_6px_12px_rgba(255,255,255,0.06)]">
             Handcrafted styles. Custom fit. Prices you’ll love.
           </p>
         </div>
@@ -928,7 +943,7 @@ function ProductCard({ product, onOpenModal }: { product: Product; onOpenModal: 
 
 function ReviewCard({ name, review, rating }: { name: string; review: string; rating: number }) {
   return (
-    <div className="w-[300px] flex-shrink-0 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="w-[300px] flex-shrink-0 rounded-xl border bg-card p-4 shadow-sm dark:shadow-[0_1px_2px_rgba(255,255,255,0.04)]">
       <div className="flex items-center gap-2 mb-2">
         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
           <span className="text-primary font-semibold">{name.charAt(0)}</span>

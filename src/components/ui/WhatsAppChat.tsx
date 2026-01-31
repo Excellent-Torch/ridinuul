@@ -184,15 +184,15 @@ export default function WhatsAppChat({ product }: Props) {
         <button
           aria-label="Open WhatsApp chat"
           onClick={openChat}
-          className="flex items-center gap-2 px-2 py-2 rounded-full bg-gradient-to-br from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white shadow-2xl ring-1 ring-black/10"
+          className="flex items-center gap-2 px-2 py-2 rounded-full bg-gradient-to-br from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white shadow-2xl dark:shadow-[0_25px_50px_rgba(255,255,255,0.04)] ring-1 ring-black/10 dark:ring-white/10"
         >
-          <img src="/whatsapp.png" alt="WhatsApp" className="h-8 w-8 md:h-10 md:w-10 drop-shadow-lg" />
+          <img src="/whatsapp.png" alt="WhatsApp" className="h-8 w-8 md:h-10 md:w-10 drop-shadow-lg dark:drop-shadow-[0_10px_8px_rgba(255,255,255,0.06)]" />
           <span className="hidden sm:inline">Order/Inquiry on WhatsApp</span>
         </button>
       </div>
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) closeChat(); }}>
-        <DialogContent className="w-[95vw] max-w-md mx-auto rounded-lg shadow-2xl border border-muted/10 bg-card overflow-hidden">
+        <DialogContent className="w-[95vw] max-w-md mx-auto rounded-lg shadow-2xl dark:shadow-[0_25px_50px_rgba(255,255,255,0.04)] border border-muted/10 bg-card overflow-hidden">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle>WhatsApp Order / Inquiry</DialogTitle>
@@ -223,7 +223,7 @@ export default function WhatsAppChat({ product }: Props) {
                           ) : (
                             <ul className="space-y-2">
                                   {cartItems.map(item => (
-                                    <li key={item.id} className="flex items-center gap-3 p-3 rounded-md bg-muted shadow-sm hover:shadow-md transition-shadow">
+                                    <li key={item.id} className="flex items-center gap-3 p-3 rounded-md bg-muted shadow-sm dark:shadow-[0_1px_2px_rgba(255,255,255,0.04)] hover:shadow-md dark:hover:shadow-[0_6px_12px_rgba(255,255,255,0.04)] transition-shadow">
                                   <div className="flex-1">
                                     <div className="font-medium">{item.name}</div>
                                     {item.price && <div className="text-xs text-muted-foreground dark:text-white">{item.price}</div>}
