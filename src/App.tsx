@@ -6,6 +6,7 @@ import { Label } from './components/ui/label';
 import { recolorClothing, type LoadingStatus } from './lib/clothing-recolor';
 import type { Product, CartItem } from './types';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from '@/components/ui/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -261,7 +262,7 @@ function App() {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-background">
+    <div ref={containerRef} className="min-h-screen bg-background dark:text-white">
       {/* Block interactions while external payment gateway is open */}
       {isProcessingPayment && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
@@ -300,7 +301,7 @@ function App() {
           <div className="flex items-center gap-2">
             <form onSubmit={handleSearch} className="hidden sm:block">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-white" />
                 <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="pl-10 w-64" />
               </div>
             </form>
@@ -334,7 +335,7 @@ function App() {
                 <SheetHeader><SheetTitle>Shopping Cart</SheetTitle></SheetHeader>
                 <div className="flex-1 overflow-y-auto py-4">
                   {cart.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
+                    <div className="text-center py-12 text-muted-foreground dark:text-white">
                       <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" />
                       <p>Your cart is empty</p>
                     </div>
@@ -346,7 +347,7 @@ function App() {
                           <div className="flex-1">
                             <p className="font-medium line-clamp-1">{item.name}</p>
                             {(item.size || item.color) && (
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-xs text-muted-foreground dark:text-white">
                                 {item.size && <span>Size: {item.size}</span>}
                                 {item.size && item.color && <span> • </span>}
                                 {item.color && <span>Color: {item.color}</span>}
@@ -376,6 +377,7 @@ function App() {
                 )}
               </SheetContent>
             </Sheet>
+            <ThemeToggle />
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               <Menu className="h-5 w-5" />
             </Button>
@@ -385,7 +387,7 @@ function App() {
           <div className="md:hidden p-4 border-t space-y-4">
             <form onSubmit={handleSearch}>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-white" />
                 <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="pl-10" />
               </div>
             </form>
@@ -456,7 +458,7 @@ function App() {
       <section className="relative z-20 bg-background py-12 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 mb-8">
           <h2 className="text-3xl font-bold text-center mb-2">What Our Customers Say</h2>
-          <p className="text-muted-foreground text-center">Real reviews from our happy customers</p>
+          <p className="text-muted-foreground text-center dark:text-white">Real reviews from our happy customers</p>
         </div>
         <Marquee pauseOnHover className="[--duration:30s]">
           {REVIEWS.map((review) => (
@@ -482,10 +484,10 @@ function App() {
             <Card className="mb-6">
               <CardContent className="p-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <Label className="text-sm text-black">Filter</Label>
+                  <Label className="text-sm text-black dark:text-white">Filter</Label>
                   <Select value={categorizeMethod} onValueChange={(v) => setCategorizeMethod(v as any)}>
-                    <SelectTrigger className="w-36 max-w-[11rem] text-black">
-                      <SelectValue className="text-black" />
+                    <SelectTrigger className="w-36 max-w-[11rem] text-black dark:text-white">
+                      <SelectValue className="text-black dark:text-white" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">All</SelectItem>
@@ -568,8 +570,8 @@ function App() {
                   <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 }}>
                     <Card className="mb-3">
                       <CardContent className="flex items-center justify-between py-3 px-4">
-                        <span className="text-lg font-semibold text-black">{label}</span>
-                        <span className="text-sm text-muted-foreground">({items.length})</span>
+                        <span className="text-lg font-semibold text-black dark:text-white">{label}</span>
+                        <span className="text-sm text-muted-foreground dark:text-white">({items.length})</span>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -595,13 +597,13 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <img src="/logo.png" alt="Handmade Threads Logo" className="h-20 w-20 mb-2" />
-            <p className="text-muted-foreground">Every piece is crafted with care, bringing traditional craftsmanship to your wardrobe.</p>
+            <p className="text-muted-foreground dark:text-white">Every piece is crafted with care, bringing traditional craftsmanship to your wardrobe.</p>
           </div>
-          <div>
+            <div>
             <h4 className="font-semibold mb-4">Categories</h4>
             <ul className="space-y-2">
               {CATEGORIES.slice(1).map(cat => (
-                <li key={cat}><Button variant="link" className="p-0 h-auto text-muted-foreground" onClick={() => { selectCategory(cat.toLowerCase()); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{cat}</Button></li>
+                <li key={cat}><Button variant="link" className="p-0 h-auto text-muted-foreground dark:text-white" onClick={() => { selectCategory(cat.toLowerCase()); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{cat}</Button></li>
               ))}
             </ul>
           </div>
@@ -609,13 +611,13 @@ function App() {
             <h4 className="font-semibold mb-4">Policies</h4>
             <ul className="space-y-2">
               {getPolicyLinks().map(policy => (
-                <li key={policy.type}><a href={policy.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-sm">{policy.title}</a></li>
+                <li key={policy.type}><a href={policy.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground dark:text-white hover:text-foreground transition-colors text-sm">{policy.title}</a></li>
               ))}
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-muted-foreground text-sm">
+            <ul className="space-y-2 text-muted-foreground dark:text-white text-sm">
               <li>Email: contact@ridinuul.com</li>
               <li>Phone: +94 71 237 6114</li>
               <li>Address: 2/5 Maharagewatha Delgahawatha, Angoda, Kotikwatta, Sri Lanka</li>
@@ -623,7 +625,7 @@ function App() {
           </div>
         </div>
         <Separator className="my-8 max-w-7xl mx-auto" />
-        <p className="text-center text-muted-foreground">&copy; 2026 ridinuul.com All rights reserved.</p>
+        <p className="text-center text-muted-foreground dark:text-white">&copy; 2026 ridinuul.com All rights reserved.</p>
       </motion.footer>
 
       {/* Product Detail Modal */}
@@ -665,7 +667,7 @@ function App() {
                 <div className="space-y-4">
                   <Badge variant="outline">{selectedProduct.category}</Badge>
                   <p className="text-3xl font-bold text-primary">{formatPrice(selectedProduct.price)}</p>
-                  <p className="text-muted-foreground">{selectedProduct.description}</p>
+                  <p className="text-muted-foreground dark:text-white">{selectedProduct.description}</p>
 
                   <Separator />
 
@@ -706,7 +708,7 @@ function App() {
                         />
                       ))}
                     </div>
-                    {selectedColor && <p className="text-sm text-muted-foreground">Selected: {selectedColor}</p>}
+                    {selectedColor && <p className="text-sm text-muted-foreground dark:text-white">Selected: {selectedColor}</p>}
                     <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
                       ⚠️ AI color previews are for Reference Only and may not always display correctly. The final product color may vary slightly.
                     </p>
@@ -762,11 +764,11 @@ function App() {
           
           <form onSubmit={handleCheckoutSubmit} className="space-y-4 mt-4">
             {/* Order Summary */}
-            <div className="bg-muted rounded-lg p-4 space-y-2">
+              <div className="bg-muted rounded-lg p-4 space-y-2">
               <h4 className="font-semibold text-sm">Order Summary</h4>
               {cart.map(item => (
                 <div key={item._id} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
+                  <span className="text-muted-foreground dark:text-white">
                     {item.name} x{item.quantity}
                     {item.size && <span className="ml-1">(Size: {item.size})</span>}
                     {item.color && <span className="ml-1">(Color: {item.color})</span>}
@@ -779,6 +781,9 @@ function App() {
                 <span>Total</span>
                 <span>{formatPrice(cartTotal)}</span>
               </div>
+            </div>
+            <div>
+              <p className="text-muted-foreground dark:text-white">Every piece is crafted with care, bringing traditional craftsmanship to your wardrobe.</p>
             </div>
 
             <Separator />
@@ -860,7 +865,7 @@ function App() {
                 value={checkoutForm.notes}
                 onChange={(e) => updateCheckoutForm('notes', e.target.value)}
                 placeholder="Any special instructions for your order..."
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground dark:placeholder:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 
@@ -911,7 +916,7 @@ function ProductCard({ product, onOpenModal }: { product: Product; onOpenModal: 
       <CardContent className="p-4">
         <Badge variant="outline" className="mb-2">{product.category}</Badge>
         <h3 className="font-semibold line-clamp-1">{product.name}</h3>
-        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
+        <p className="text-sm text-muted-foreground dark:text-white line-clamp-2 mt-1">{product.description}</p>
           <div className="flex items-center justify-between mt-4">
           <span className="text-xl font-bold">{formatPrice(product.price)}</span>
           <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onOpenModal(product); }}>View</Button>
@@ -932,12 +937,12 @@ function ReviewCard({ name, review, rating }: { name: string; review: string; ra
           <p className="font-medium text-sm">{name}</p>
           <div className="flex gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
-              <span key={i} className={i < rating ? 'text-yellow-500' : 'text-muted-foreground/30'}>★</span>
+              <span key={i} className={i < rating ? 'text-yellow-500' : 'text-muted-foreground/30 dark:text-white/30'}>★</span>
             ))}
           </div>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">{review}</p>
+      <p className="text-sm text-muted-foreground dark:text-white">{review}</p>
     </div>
   );
 }

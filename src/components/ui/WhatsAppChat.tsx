@@ -216,17 +216,17 @@ export default function WhatsAppChat({ product }: Props) {
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <Label>Cart Items</Label>
-                            <div className="text-sm text-muted-foreground">{cartItems.length} item(s)</div>
+                            <div className="text-sm text-muted-foreground dark:text-white">{cartItems.length} item(s)</div>
                           </div>
                           {cartItems.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">No items found in cart. You can add custom items below.</div>
+                            <div className="text-sm text-muted-foreground dark:text-white">No items found in cart. You can add custom items below.</div>
                           ) : (
                             <ul className="space-y-2">
                                   {cartItems.map(item => (
                                     <li key={item.id} className="flex items-center gap-3 p-3 rounded-md bg-muted shadow-sm hover:shadow-md transition-shadow">
                                   <div className="flex-1">
                                     <div className="font-medium">{item.name}</div>
-                                    {item.price && <div className="text-xs text-muted-foreground">{item.price}</div>}
+                                    {item.price && <div className="text-xs text-muted-foreground dark:text-white">{item.price}</div>}
                                   </div>
                                   <div className="flex items-center gap-1">
                                         <Button variant="outline" size="icon" onClick={() => changeItemQuantity(item.id, -1)}><Minus className="h-4 w-4" /></Button>
@@ -266,7 +266,7 @@ export default function WhatsAppChat({ product }: Props) {
               <div className="space-y-3">
                 <Label>Message</Label>
                 <textarea value={message} onChange={(e) => setMessage(e.target.value)} className="w-full min-h-[120px] rounded-md border px-3 py-2" />
-                <p className="text-sm text-muted-foreground">You will be taken to WhatsApp with a prefilled message.</p>
+                <p className="text-sm text-muted-foreground dark:text-white">You will be taken to WhatsApp with a prefilled message.</p>
               </div>
             )}
 
