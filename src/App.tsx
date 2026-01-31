@@ -447,7 +447,7 @@ function App() {
           </div>
         
           <p className="text-xl opacity-90 max-w-2xl mx-auto drop-shadow-md">
-            Explore our curated collection of artisan-crafted pieces, made with care and tradition.
+            Handcrafted styles. Custom fit. Prices you’ll love.
           </p>
         </div>
       </motion.section>
@@ -488,7 +488,7 @@ function App() {
                       <SelectValue className="text-black" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="none">All</SelectItem>
                       <SelectItem value="price">Price</SelectItem>
                       {/* <SelectItem value="availability">Availability</SelectItem> */}
                       <SelectItem value="category">Category</SelectItem>
