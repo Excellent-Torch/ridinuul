@@ -1,9 +1,50 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { CartItem, ShippingType } from "../types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+// Shipping utilities
+export const getShippingLabel = (shippingType?: ShippingType, shippingFee?: number): string => {
+  if (!shippingType || shippingType === 'free') return 'Free Shipping';
+  if (shippingType === 'fixed' && shippingFee !== undefined) {
+    return shippingFee === 0 ? 'Free Shipping' : `LKR ${shippingFee.toLocaleString()}`;
+  }
+  if (shippingType === 'calculated') return 'Calculated at checkout';
+  return 'Free Shipping';
+};
+
+export const getItemShippingFee = (item: CartItem): number => {
+  if (!item.shippingType || item.shippingType === 'free') return 0;
+  if (item.shippingType === 'fixed') return item.shippingFee ?? 0;
+  return 0; // 'calculated' handled separately if needed
+};
+
+export const calculateShippingTotal = (cart: CartItem[]): number => {
+  // Get unique products by base ID (without size/color variants)
+  const uniqueProducts = new Map<string, CartItem>();
+  
+  for (const item of cart) {
+    // Extract base product ID (remove size/color suffix)
+    const baseId = item._id.split('-')[0];
+    
+    // Only count shipping once per unique product (not per variant)
+    if (!uniqueProducts.has(baseId)) {
+      uniqueProducts.set(baseId, item);
+    }
+  }
+  
+  // Calculate total shipping for unique products
+  return Array.from(uniqueProducts.values()).reduce((total, item) => {
+    return total + getItemShippingFee(item);
+  }, 0);
+};
+
+export const hasAnyShippingFee = (cart: CartItem[]): boolean => {
+  return cart.some(item => getItemShippingFee(item) > 0);
+};
 
 export type CategorizeMethod = 'price' | 'availability' | 'category' | 'none';
 

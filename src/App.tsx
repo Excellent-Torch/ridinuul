@@ -18,7 +18,7 @@ import { MagicCard } from "@/components/ui/magic-card";
 import { Marquee } from "@/components/ui/marquee";
 
 import { AnimatePresence, motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { categorizeProducts } from './lib/utils';
+import { categorizeProducts, calculateShippingTotal, getShippingLabel, hasAnyShippingFee } from './lib/utils';
 import TextAnimation from '@/components/ui/scroll-text';
 import RotatingText from '@/components/RotatingText';
 import WhatsAppChat from './components/ui/WhatsAppChat';
@@ -199,8 +199,12 @@ function App() {
   const updateQuantity = (id: string, delta: number) =>
     setCart(prev => prev.map(item => item._id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item).filter(item => item.quantity > 0));
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Cart calculations
+  const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const shippingTotal = useMemo(() => calculateShippingTotal(cart), [cart]);
+  const cartTotal = cartSubtotal + shippingTotal;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const hasFreeShipping = !hasAnyShippingFee(cart);
 
   const grouped = useMemo(() => {
     return categorizeMethod === 'none' ? null : categorizeProducts(products, categorizeMethod as any);
@@ -341,36 +345,59 @@ function App() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {cart.map(item => (
-                        <div key={item._id} className="flex gap-3 p-3 bg-muted rounded-lg">
-                          <img src={item.imageUrl} alt={item.name} className="w-16 h-16 object-cover rounded" />
-                          <div className="flex-1">
-                            <p className="font-medium line-clamp-1">{item.name}</p>
-                            {(item.size || item.color) && (
-                              <p className="text-xs text-muted-foreground dark:text-white">
-                                {item.size && <span>Size: {item.size}</span>}
-                                {item.size && item.color && <span> • </span>}
-                                {item.color && <span>Color: {item.color}</span>}
-                              </p>
-                            )}
-                            <p className="text-primary font-semibold">{formatPrice(item.price)}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item._id, -1)}><Minus className="h-3 w-3" /></Button>
-                              <span className="w-6 text-center">{item.quantity}</span>
-                              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item._id, 1)}><Plus className="h-3 w-3" /></Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-destructive" onClick={() => setCart(prev => prev.filter(i => i._id !== item._id))}><Trash2 className="h-3 w-3" /></Button>
+                      {cart.map(item => {
+                        const itemShippingFree = !item.shippingType || item.shippingType === 'free' || (item.shippingType === 'fixed' && !item.shippingFee);
+                        return (
+                          <div key={item._id} className="flex gap-3 p-3 bg-muted rounded-lg">
+                            <img src={item.imageUrl} alt={item.name} className="w-16 h-16 object-cover rounded" />
+                            <div className="flex-1">
+                              <p className="font-medium line-clamp-1">{item.name}</p>
+                              {(item.size || item.color) && (
+                                <p className="text-xs text-muted-foreground dark:text-white">
+                                  {item.size && <span>Size: {item.size}</span>}
+                                  {item.size && item.color && <span> • </span>}
+                                  {item.color && <span>Color: {item.color}</span>}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2">
+                                <p className="text-primary font-semibold">{formatPrice(item.price)}</p>
+                                {itemShippingFree ? (
+                                  <span className="text-xs text-green-600 dark:text-green-400">Free shipping</span>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground dark:text-white">+{formatPrice(item.shippingFee ?? 0)} shipping</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item._id, -1)}><Minus className="h-3 w-3" /></Button>
+                                <span className="w-6 text-center">{item.quantity}</span>
+                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item._id, 1)}><Plus className="h-3 w-3" /></Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-destructive" onClick={() => setCart(prev => prev.filter(i => i._id !== item._id))}><Trash2 className="h-3 w-3" /></Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
                 {cart.length > 0 && (
                   <SheetFooter className="flex-col gap-4 border-t pt-4">
-                    <div className="flex justify-between w-full text-lg font-semibold">
-                      <span>Total:</span>
-                      <span>{formatPrice(cartTotal)}</span>
+                    <div className="w-full space-y-2">
+                      <div className="flex justify-between text-sm text-muted-foreground dark:text-white">
+                        <span>Subtotal</span>
+                        <span>{formatPrice(cartSubtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground dark:text-white">
+                        <span>Shipping</span>
+                        <span className={hasFreeShipping ? 'text-orange-500 dark:text-orange-400 font-medium' : ''}>
+                          {hasFreeShipping ? 'Free' : formatPrice(shippingTotal)}
+                        </span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between text-lg font-semibold">
+                        <span>Total</span>
+                        <span>{formatPrice(cartTotal)}</span>
+                      </div>
                     </div>
                     <Button className="w-full" size="lg" onClick={handleCheckout}>Checkout</Button>
                   </SheetFooter>
@@ -645,7 +672,7 @@ function App() {
 
       {/* Product Detail Modal */}
       <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && closeProductModal()}>
-        <DialogContent className="w-[95vw] max-w-md sm:max-w-3xl mx-auto max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-lg sm:rounded-xl">
+        <DialogContent className="w-[95vw] max-w-md sm:max-w-3xl mx-auto max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-lg sm:rounded-xl [&>button]:border [&>button]:border-input [&>button]:rounded-md [&>button]:p-1 [&>button]:hover:bg-muted">
           {selectedProduct && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -657,11 +684,11 @@ function App() {
               </DialogHeader>
               <div className="grid md:grid-cols-2 gap-6 mt-4">
                 {/* Product Image */}
-                <div className="relative aspect-square overflow-hidden rounded-lg">
+                <div className="relative aspect-square">
                   <img
                     src={recoloredImage || selectedProduct.imageUrl || '/placeholder.jpg'}
                     alt={selectedProduct.name}
-                    className="w-full h-full object-cover transition-opacity duration-300"
+                    className="w-full h-full object-contain transition-opacity duration-300 rounded-lg shadow-md"
                   />
                   {(recolorStatus === 'loading' || recolorStatus === 'processing') && (
                     <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center gap-2">
@@ -682,6 +709,15 @@ function App() {
                 <div className="space-y-4">
                   <Badge variant="outline">{selectedProduct.category}</Badge>
                   <p className="text-3xl font-bold text-primary">{formatPrice(selectedProduct.price)}</p>
+                  {/* Shipping Info */}
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant={selectedProduct.shippingType === 'free' || !selectedProduct.shippingFee ? 'default' : 'secondary'}
+                      className={selectedProduct.shippingType === 'free' || !selectedProduct.shippingFee ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                    >
+                      {getShippingLabel(selectedProduct.shippingType, selectedProduct.shippingFee)}
+                    </Badge>
+                  </div>
                   <p className="text-muted-foreground dark:text-white">{selectedProduct.description}</p>
 
                   <Separator />
@@ -772,7 +808,7 @@ function App() {
 
       {/* Checkout Form Modal */}
       <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto [&>button]:border [&>button]:border-input [&>button]:rounded-md [&>button]:p-1 [&>button]:hover:bg-muted">
           <DialogHeader>
             <DialogTitle className="text-2xl">Checkout</DialogTitle>
           </DialogHeader>
@@ -791,6 +827,17 @@ function App() {
                   <span>{formatPrice(item.price * item.quantity)}</span>
                 </div>
               ))}
+              <Separator className="my-2" />
+              <div className="flex justify-between text-sm text-muted-foreground dark:text-white">
+                <span>Subtotal</span>
+                <span>{formatPrice(cartSubtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-muted-foreground dark:text-white">
+                <span>Shipping</span>
+                <span className={hasFreeShipping ? 'text-orange-500 dark:text-orange-400 font-medium' : ''}>
+                  {hasFreeShipping ? 'Free' : formatPrice(shippingTotal)}
+                </span>
+              </div>
               <Separator className="my-2" />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
@@ -921,18 +968,32 @@ function App() {
 
 function ProductCard({ product, onOpenModal }: { product: Product; onOpenModal: (p: Product) => void }) {
   const imageUrl = product.imageUrl || '/placeholder.jpg';
+  const isFreeShipping = !product.shippingType || product.shippingType === 'free' || (product.shippingType === 'fixed' && !product.shippingFee);
 
   return (
     <MagicCard className="overflow-hidden group cursor-pointer" onClick={() => onOpenModal(product)}>
       <div className="relative aspect-square overflow-hidden">
         <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         {product.inStock === false && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Badge variant="secondary">Out of Stock</Badge></div>}
+        {/* Free shipping badge on image */}
+        {isFreeShipping && product.inStock !== false && (
+          <Badge className="absolute top-2 left-2 bg-orange-500 hover:bg-orange-600 text-white text-xs">
+            Free Shipping
+          </Badge>
+        )}
       </div>
       <CardContent className="p-4">
-        <Badge variant="outline" className="mb-2">{product.category}</Badge>
+        <div className="flex items-center gap-2 mb-2">
+          <Badge variant="outline">{product.category}</Badge>
+          {!isFreeShipping && (
+            <Badge variant="secondary" className="text-xs">
+              +{formatPrice(product.shippingFee ?? 0)} shipping
+            </Badge>
+          )}
+        </div>
         <h3 className="font-semibold line-clamp-1">{product.name}</h3>
         <p className="text-sm text-muted-foreground dark:text-white line-clamp-2 mt-1">{product.description}</p>
-          <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between mt-4">
           <span className="text-xl font-bold">{formatPrice(product.price)}</span>
           <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onOpenModal(product); }}>View</Button>
         </div>

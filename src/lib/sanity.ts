@@ -66,7 +66,9 @@ const productProjection = `{
   price,
   category,
   "imageUrl": image.asset->url,
-  inStock
+  inStock,
+  shippingType,
+  shippingFee
 }`;
 
 export const getProducts = (): Promise<Product[]> => {

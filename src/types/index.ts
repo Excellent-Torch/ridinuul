@@ -1,3 +1,5 @@
+export type ShippingType = 'free' | 'fixed' | 'calculated';
+
 export interface Product {
   _id: string;
   name: string;
@@ -6,6 +8,8 @@ export interface Product {
   category: string;
   imageUrl: string;
   inStock?: boolean;
+  shippingType?: ShippingType;
+  shippingFee?: number;
 }
 
 export interface CartItem extends Product {
