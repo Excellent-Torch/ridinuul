@@ -65,7 +65,7 @@ function App() {
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
-  const [recoloredImage, setRecoloredImage] = useState<string | null>(null);
+  const [recoloredImages, setRecoloredImages] = useState<Record<number, string>>({});
   const [recolorStatus, setRecolorStatus] = useState<LoadingStatus>('idle');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [categorizeMethod, setCategorizeMethod] = useState<'none' | 'price' | 'availability' | 'category'>('none');
@@ -157,7 +157,7 @@ function App() {
     setSelectedSize('');
     setSelectedColor('');
     setQuantity(1);
-    setRecoloredImage(null);
+    setRecoloredImages({});
     setRecolorStatus('idle');
     setCurrentImageIndex(0);
   };
@@ -167,26 +167,50 @@ function App() {
     setSelectedSize('');
     setSelectedColor('');
     setQuantity(1);
-    setRecoloredImage(null);
+    setRecoloredImages({});
     setRecolorStatus('idle');
     setCurrentImageIndex(0);
   };
 
+  // Compute all product images for color selection
+  const allProductImages = useMemo(() => {
+    if (!selectedProduct) return [];
+    const images = [selectedProduct.imageUrl];
+    if (selectedProduct.images && selectedProduct.images.length > 0) {
+      images.push(...selectedProduct.images);
+    }
+    return images.filter(Boolean) as string[];
+  }, [selectedProduct]);
+
   const handleColorSelect = useCallback(async (colorName: string, colorValue: string) => {
     setSelectedColor(colorName);
-    if (!selectedProduct?.imageUrl) return;
+    const currentImageUrl = allProductImages[currentImageIndex];
+    if (!currentImageUrl) return;
     
     try {
       const recolored = await recolorClothing(
-        selectedProduct.imageUrl,
+        currentImageUrl,
         colorValue,
         setRecolorStatus
       );
-      setRecoloredImage(recolored);
+      setRecoloredImages(prev => ({ ...prev, [currentImageIndex]: recolored }));
     } catch {
-      setRecoloredImage(null);
+      setRecoloredImages(prev => {
+        const next = { ...prev };
+        delete next[currentImageIndex];
+        return next;
+      });
     }
-  }, [selectedProduct]);
+  }, [allProductImages, currentImageIndex]);
+
+  const clearCurrentRecolor = useCallback(() => {
+    setRecoloredImages(prev => {
+      const next = { ...prev };
+      delete next[currentImageIndex];
+      return next;
+    });
+    setSelectedColor('');
+  }, [currentImageIndex]);
 
   const handleAddFromModal = () => {
     if (!selectedProduct) return;
@@ -689,7 +713,7 @@ function App() {
                 {/* Product Image Gallery */}
                 <ProductImageGallery
                   product={selectedProduct}
-                  recoloredImage={recoloredImage}
+                  recoloredImages={recoloredImages}
                   recolorStatus={recolorStatus}
                   currentImageIndex={currentImageIndex}
                   onImageChange={setCurrentImageIndex}
@@ -749,7 +773,16 @@ function App() {
                         />
                       ))}
                     </div>
-                    {selectedColor && <p className="text-sm text-muted-foreground dark:text-white">Selected: {selectedColor}</p>}
+                    {selectedColor && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-muted-foreground dark:text-white">Selected: {selectedColor}</p>
+                        {recoloredImages[currentImageIndex] && (
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={clearCurrentRecolor}>
+                            Reset
+                          </Button>
+                        )}
+                      </div>
+                    )}
                     <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
                       ⚠️ AI color previews are for Reference Only and may not always display correctly. The final product color may vary slightly.
                     </p>
@@ -959,7 +992,7 @@ function App() {
 // Product Image Gallery Component
 interface ProductImageGalleryProps {
   product: Product;
-  recoloredImage: string | null;
+  recoloredImages: Record<number, string>;
   recolorStatus: LoadingStatus;
   currentImageIndex: number;
   onImageChange: (index: number) => void;
@@ -967,7 +1000,7 @@ interface ProductImageGalleryProps {
 
 function ProductImageGallery({ 
   product, 
-  recoloredImage, 
+  recoloredImages, 
   recolorStatus, 
   currentImageIndex, 
   onImageChange 
@@ -982,7 +1015,8 @@ function ProductImageGallery({
   }, [product.imageUrl, product.images]);
 
   const hasMultipleImages = allImages.length > 1;
-  const currentImage = recoloredImage || allImages[currentImageIndex] || '/placeholder.jpg';
+  // Use recolored image for current index if available, otherwise show original
+  const currentImage = recoloredImages[currentImageIndex] || allImages[currentImageIndex] || '/placeholder.jpg';
 
   const goToPrevious = useCallback(() => {
     onImageChange(currentImageIndex === 0 ? allImages.length - 1 : currentImageIndex - 1);
@@ -1063,17 +1097,21 @@ function ProductImageGallery({
             <button
               key={idx}
               onClick={() => onImageChange(idx)}
-              className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
+              className={`relative flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
                 idx === currentImageIndex 
                   ? 'border-primary ring-2 ring-primary/20' 
                   : 'border-transparent hover:border-muted-foreground/30'
               }`}
             >
               <img
-                src={img}
+                src={recoloredImages[idx] || img}
                 alt={`${product.name} thumbnail ${idx + 1}`}
                 className="w-full h-full object-cover"
               />
+              {/* Indicator for recolored images */}
+              {recoloredImages[idx] && (
+                <div className="absolute bottom-0.5 right-0.5 w-2 h-2 bg-primary rounded-full" title="Color applied" />
+              )}
             </button>
           ))}
         </div>
