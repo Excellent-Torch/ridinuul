@@ -1035,7 +1035,7 @@ function ProductImageGallery({
             key={currentImage}
             src={currentImage}
             alt={`${product.name} - Image ${currentImageIndex + 1}`}
-            className="w-full h-full object-contain transition-opacity duration-300 rounded-lg shadow-md"
+            className="w-full h-full object-cover transition-opacity duration-300 rounded-lg shadow-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
