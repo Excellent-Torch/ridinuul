@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ShoppingCart, Search, Menu, Plus, Minus, Trash2, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
+import { ShoppingCart, Search, Menu, Plus, Minus, Trash2, Loader2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getProducts, getProductsByCategory, searchProducts } from './lib/sanity';
 import { initiatePayment, getPolicyLinks } from './lib/payhere';
 import { Label } from './components/ui/label';
@@ -67,6 +67,7 @@ function App() {
   const [quantity, setQuantity] = useState(1);
   const [recoloredImage, setRecoloredImage] = useState<string | null>(null);
   const [recolorStatus, setRecolorStatus] = useState<LoadingStatus>('idle');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [categorizeMethod, setCategorizeMethod] = useState<'none' | 'price' | 'availability' | 'category'>('none');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
@@ -158,6 +159,7 @@ function App() {
     setQuantity(1);
     setRecoloredImage(null);
     setRecolorStatus('idle');
+    setCurrentImageIndex(0);
   };
 
   const closeProductModal = () => {
@@ -167,6 +169,7 @@ function App() {
     setQuantity(1);
     setRecoloredImage(null);
     setRecolorStatus('idle');
+    setCurrentImageIndex(0);
   };
 
   const handleColorSelect = useCallback(async (colorName: string, colorValue: string) => {
@@ -683,27 +686,14 @@ function App() {
                 <DialogTitle className="text-2xl">{selectedProduct.name}</DialogTitle>
               </DialogHeader>
               <div className="grid md:grid-cols-2 gap-6 mt-4">
-                {/* Product Image */}
-                <div className="relative aspect-square">
-                  <img
-                    src={recoloredImage || selectedProduct.imageUrl || '/placeholder.jpg'}
-                    alt={selectedProduct.name}
-                    className="w-full h-full object-contain transition-opacity duration-300 rounded-lg shadow-md"
-                  />
-                  {(recolorStatus === 'loading' || recolorStatus === 'processing') && (
-                    <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center gap-2">
-                      <Loader2 className="h-8 w-8 animate-spin text-white" />
-                      <span className="text-white text-sm">
-                        {recolorStatus === 'loading' ? 'Loading AI model...' : 'Applying color...'}
-                      </span>
-                    </div>
-                  )}
-                  {selectedProduct.inStock === false && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <Badge variant="secondary" className="text-lg">Out of Stock</Badge>
-                    </div>
-                  )}
-                </div>
+                {/* Product Image Gallery */}
+                <ProductImageGallery
+                  product={selectedProduct}
+                  recoloredImage={recoloredImage}
+                  recolorStatus={recolorStatus}
+                  currentImageIndex={currentImageIndex}
+                  onImageChange={setCurrentImageIndex}
+                />
 
                 {/* Product Details */}
                 <div className="space-y-4">
@@ -962,6 +952,132 @@ function App() {
         </DialogContent>
       </Dialog>
       <WhatsAppChat product={selectedProduct} />
+    </div>
+  );
+}
+
+// Product Image Gallery Component
+interface ProductImageGalleryProps {
+  product: Product;
+  recoloredImage: string | null;
+  recolorStatus: LoadingStatus;
+  currentImageIndex: number;
+  onImageChange: (index: number) => void;
+}
+
+function ProductImageGallery({ 
+  product, 
+  recoloredImage, 
+  recolorStatus, 
+  currentImageIndex, 
+  onImageChange 
+}: ProductImageGalleryProps) {
+  // Combine main image with additional images
+  const allImages = useMemo(() => {
+    const images = [product.imageUrl];
+    if (product.images && product.images.length > 0) {
+      images.push(...product.images);
+    }
+    return images.filter(Boolean) as string[];
+  }, [product.imageUrl, product.images]);
+
+  const hasMultipleImages = allImages.length > 1;
+  const currentImage = recoloredImage || allImages[currentImageIndex] || '/placeholder.jpg';
+
+  const goToPrevious = useCallback(() => {
+    onImageChange(currentImageIndex === 0 ? allImages.length - 1 : currentImageIndex - 1);
+  }, [currentImageIndex, allImages.length, onImageChange]);
+
+  const goToNext = useCallback(() => {
+    onImageChange(currentImageIndex === allImages.length - 1 ? 0 : currentImageIndex + 1);
+  }, [currentImageIndex, allImages.length, onImageChange]);
+
+  return (
+    <div className="space-y-3">
+      {/* Main Image */}
+      <div className="relative aspect-square">
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={currentImage}
+            src={currentImage}
+            alt={`${product.name} - Image ${currentImageIndex + 1}`}
+            className="w-full h-full object-contain transition-opacity duration-300 rounded-lg shadow-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
+        </AnimatePresence>
+
+        {/* Navigation Arrows */}
+        {hasMultipleImages && (
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+              onClick={goToPrevious}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+              onClick={goToNext}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </>
+        )}
+
+        {/* Loading Overlay */}
+        {(recolorStatus === 'loading' || recolorStatus === 'processing') && (
+          <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center gap-2 rounded-lg">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+            <span className="text-white text-sm">
+              {recolorStatus === 'loading' ? 'Loading AI model...' : 'Applying color...'}
+            </span>
+          </div>
+        )}
+
+        {/* Out of Stock Overlay */}
+        {product.inStock === false && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+            <Badge variant="secondary" className="text-lg">Out of Stock</Badge>
+          </div>
+        )}
+
+        {/* Image Counter */}
+        {hasMultipleImages && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+            {currentImageIndex + 1} / {allImages.length}
+          </div>
+        )}
+      </div>
+
+      {/* Thumbnail Strip */}
+      {hasMultipleImages && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {allImages.map((img, idx) => (
+            <button
+              key={idx}
+              onClick={() => onImageChange(idx)}
+              className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
+                idx === currentImageIndex 
+                  ? 'border-primary ring-2 ring-primary/20' 
+                  : 'border-transparent hover:border-muted-foreground/30'
+              }`}
+            >
+              <img
+                src={img}
+                alt={`${product.name} thumbnail ${idx + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

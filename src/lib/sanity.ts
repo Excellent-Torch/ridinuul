@@ -66,6 +66,7 @@ const productProjection = `{
   price,
   category,
   "imageUrl": image.asset->url,
+  "images": images[].asset->url,
   inStock,
   shippingType,
   shippingFee

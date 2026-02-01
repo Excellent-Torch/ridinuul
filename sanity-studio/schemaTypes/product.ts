@@ -23,12 +23,26 @@ export default defineType({
     }),
     defineField({
       name: 'image',
-      title: 'Product Image',
+      title: 'Main Product Image',
       type: 'image',
       options: {
         hotspot: true
       },
       validation: Rule => Rule.required()
+    }),
+    defineField({
+      name: 'images',
+      title: 'Additional Images',
+      description: 'Add more images to create a gallery. The main image will be shown first.',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: {
+            hotspot: true
+          }
+        }
+      ]
     }),
     defineField({
       name: 'description',
