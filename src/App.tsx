@@ -251,6 +251,38 @@ function App() {
     setIsCheckoutOpen(true);
   };
 
+  const handleWhatsAppOrder = (cartItems: CartItem[], total: number, shipping: number) => {
+    if (cartItems.length === 0) return;
+    
+    const WHATSAPP_NUMBER = '94712376114';
+    
+    // Build the order message
+    const lines: string[] = [
+      '🛒 *New Order from Website*',
+      '',
+      '*Order Items:*',
+    ];
+    
+    cartItems.forEach((item, index) => {
+      let itemLine = `${index + 1}. ${item.name} × ${item.quantity}`;
+      if (item.size) itemLine += ` (Size: ${item.size})`;
+      if (item.color) itemLine += ` (Color: ${item.color})`;
+      itemLine += ` - ${formatPrice(item.price * item.quantity)}`;
+      lines.push(itemLine);
+    });
+    
+    lines.push('');
+    lines.push(`*Subtotal:* ${formatPrice(total - shipping)}`);
+    lines.push(`*Shipping:* ${shipping === 0 ? 'Free' : formatPrice(shipping)}`);
+    lines.push(`*Total:* ${formatPrice(total)}`);
+    lines.push('');
+    lines.push('_Please confirm my order and share payment details._');
+    
+    const message = encodeURIComponent(lines.join('\n'));
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+    
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -389,7 +421,7 @@ function App() {
                               <div className="flex items-center gap-2">
                                 <p className="text-primary font-semibold">{formatPrice(item.price)}</p>
                                 {itemShippingFree ? (
-                                  <span className="text-xs text-green-600 dark:text-green-400">Free shipping</span>
+                                  <span className="text-xs text-orange-600 dark:text-orange-400">Free shipping</span>
                                 ) : (
                                   <span className="text-xs text-muted-foreground dark:text-white">+{formatPrice(item.shippingFee ?? 0)} shipping</span>
                                 )}
@@ -408,25 +440,44 @@ function App() {
                   )}
                 </div>
                 {cart.length > 0 && (
-                  <SheetFooter className="flex-col gap-4 border-t pt-4">
-                    <div className="w-full space-y-2">
-                      <div className="flex justify-between text-sm text-muted-foreground dark:text-white">
-                        <span>Subtotal</span>
-                        <span>{formatPrice(cartSubtotal)}</span>
+                  <SheetFooter className="flex-col gap-3 border-t pt-4">
+                    {/* Order Summary */}
+                    <div className="w-full space-y-1.5 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground dark:text-white shrink-0">Subtotal</span>
+                        <span className="text-right truncate">{formatPrice(cartSubtotal)}</span>
                       </div>
-                      <div className="flex justify-between text-sm text-muted-foreground dark:text-white">
-                        <span>Shipping</span>
-                        <span className={hasFreeShipping ? 'text-orange-500 dark:text-orange-400 font-medium' : ''}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground dark:text-white shrink-0">Shipping</span>
+                        <span className={`text-right truncate ${hasFreeShipping ? 'text-orange-500 dark:text-orange-400 font-medium' : ''}`}>
                           {hasFreeShipping ? 'Free' : formatPrice(shippingTotal)}
                         </span>
                       </div>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between text-lg font-semibold">
-                        <span>Total</span>
-                        <span>{formatPrice(cartTotal)}</span>
+                      <Separator className="my-1.5" />
+                      <div className="flex items-center justify-between gap-2 text-base font-semibold">
+                        <span className="shrink-0">Total</span>
+                        <span className="text-right truncate">{formatPrice(cartTotal)}</span>
                       </div>
                     </div>
-                    <Button className="w-full" size="lg" onClick={handleCheckout}>Checkout</Button>
+                    {/* Order buttons */}
+                    <div className="w-full flex flex-col items-center gap-3">
+                      <Button 
+                        className="w-full" 
+                        size="default" 
+                        onClick={handleCheckout}
+                      >
+                        Checkout
+                      </Button>
+                      <p className="text-sm text-muted-foreground dark:text-white">Or</p>
+                      <Button 
+                        className="bg-green-600 hover:bg-green-700 text-white gap-2" 
+                        onClick={() => handleWhatsAppOrder(cart, cartTotal, shippingTotal)}
+                        title="Order via WhatsApp"
+                      >
+                        Order Via
+                        <img src="/whatsapp.png" alt="WhatsApp" className="w-8 h-8" />
+                      </Button>
+                    </div>
                   </SheetFooter>
                 )}
               </SheetContent>
