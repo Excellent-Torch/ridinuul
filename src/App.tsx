@@ -50,6 +50,43 @@ const REVIEWS = [
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', minimumFractionDigits: 0 }).format(price);
 
+const mobileMenuContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      when: 'beforeChildren' as const,
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      when: 'afterChildren' as const,
+      staggerChildren: 0.05,
+      staggerDirection: -1,
+    },
+  },
+} as const;
+
+const mobileMenuItemVariants = {
+  hidden: { opacity: 0, x: 40 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.32,
+      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: 40,
+    transition: { duration: 0.2, ease: [0.4, 0, 1, 1] as [number, number, number, number] },
+  },
+} as const;
+
 const getEffectiveUnitPrice = (product: Pick<Product, 'price' | 'discountType' | 'discountValue'>) =>
   getDiscountedPrice(product.price, product.discountType, product.discountValue);
 
@@ -518,25 +555,33 @@ function App() {
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
-              initial={{ opacity: 1, height: 0, y: 0}}
-              animate={{ opacity: 1, height: 'auto', y: 0}}
-              exit={{ opacity: 0, height: 0, y: 0 }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2, ease: 'easeInOut' }}
-              className="md:hidden p-4 border-t space-y-4 overflow-hidden"
+              className="md:hidden border-t overflow-hidden"
             >
-              <form onSubmit={handleSearch}>
+              <motion.div
+                className="p-4 flex flex-col gap-4"
+                variants={mobileMenuContainerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+              <motion.form onSubmit={handleSearch} variants={mobileMenuItemVariants}>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-white" />
                   <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search..." className="pl-10" />
                 </div>
-              </form>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map(cat => (
-                  <Button key={cat} variant={selectedCategory === cat.toLowerCase() ? 'default' : 'secondary'} size="sm" onClick={() => selectCategory(cat.toLowerCase())}>
+              </motion.form>
+              {CATEGORIES.map(cat => (
+                <motion.div key={cat} variants={mobileMenuItemVariants}>
+                  <Button variant={selectedCategory === cat.toLowerCase() ? 'default' : 'secondary'} size="sm" className="w-full" onClick={() => selectCategory(cat.toLowerCase())}>
                     {cat}
                   </Button>
-                ))}
-              </div>
+                </motion.div>
+              ))}
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
