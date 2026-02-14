@@ -1,11 +1,17 @@
 export type ShippingType = 'free' | 'fixed' | 'calculated';
+export type DiscountType = 'none' | 'priceCut';
 
 export interface Product {
   _id: string;
   name: string;
   description: string;
   price: number;
+  discountType?: DiscountType;
+  discountValue?: number;
   category: string;
+  customTag?: string;
+  customTagBgColor?: string;
+  customTagTextColor?: string;
   imageUrl: string;
   images?: string[];
   inStock?: boolean;

@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import type { CartItem, ShippingType } from "../types"
+import type { CartItem, DiscountType, ShippingType } from "../types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -44,6 +44,21 @@ export const calculateShippingTotal = (cart: CartItem[]): number => {
 
 export const hasAnyShippingFee = (cart: CartItem[]): boolean => {
   return cart.some(item => getItemShippingFee(item) > 0);
+};
+
+export const getDiscountedPrice = (
+  price: number,
+  discountType?: DiscountType,
+  discountValue?: number
+): number => {
+  if (discountType !== 'priceCut') return price;
+  const reduction = discountValue ?? 0;
+  if (reduction <= 0) return price;
+  return Math.max(price - reduction, 0);
+};
+
+export const isPriceCutDiscount = (discountType?: DiscountType, discountValue?: number): boolean => {
+  return discountType === 'priceCut' && (discountValue ?? 0) > 0;
 };
 
 export type CategorizeMethod = 'price' | 'availability' | 'category' | 'none';

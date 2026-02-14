@@ -37,7 +37,7 @@ export default function WhatsAppChat({ product }: Props) {
       return product ? `Hi, I'm interested in *${product.name}*.\nPlease help me with availability and custom order details.` : 'Hi, I have a query about your products.';
     }
 
-    const lines = ['🛍️ *Order Details:*', ''];
+    const lines = ['*Order Details:*', ''];
     items.forEach((item, idx) => {
       lines.push(`${idx + 1}. ${item.name} × ${item.quantity}${item.price ? ` (${item.price})` : ''}`);
     });

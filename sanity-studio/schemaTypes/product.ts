@@ -57,6 +57,41 @@ export default defineType({
       validation: Rule => Rule.required().positive()
     }),
     defineField({
+      name: 'discountType',
+      title: 'Discount Type',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'No Discount', value: 'none' },
+          { title: 'Price Cut', value: 'priceCut' }
+        ],
+        layout: 'radio'
+      },
+      initialValue: 'none'
+    }),
+    defineField({
+      name: 'discountValue',
+      title: 'Discount Amount (LKR)',
+      description: 'Amount to reduce from the original price.',
+      type: 'number',
+      hidden: ({ parent }) => parent?.discountType !== 'priceCut',
+      validation: Rule =>
+        Rule.custom((value, context) => {
+          const parent = context.parent as { discountType?: string; price?: number };
+          if (parent?.discountType !== 'priceCut') return true;
+          if (value === undefined || value === null) {
+            return 'Discount amount is required for Price Cut';
+          }
+          if (value < 0) {
+            return 'Discount amount cannot be negative';
+          }
+          if (typeof parent?.price === 'number' && value >= parent.price) {
+            return 'Discount amount must be less than the product price';
+          }
+          return true;
+        })
+    }),
+    defineField({
       name: 'category',
       title: 'Category',
       type: 'string',
@@ -76,6 +111,27 @@ export default defineType({
       title: 'In Stock',
       type: 'boolean',
       initialValue: true
+    }),
+    defineField({
+      name: 'customTag',
+      title: 'Custom Tag',
+      description: 'Optional custom badge text (e.g. "Valentine Special", "New Arrival", "New Year Special").',
+      type: 'string',
+      validation: Rule => Rule.max(40)
+    }),
+    defineField({
+      name: 'customTagBgColor',
+      title: 'Custom Tag Background Color',
+      description: 'Optional background color for the custom tag badge.',
+      type: 'color',
+      hidden: ({ parent }) => !parent?.customTag
+    }),
+    defineField({
+      name: 'customTagTextColor',
+      title: 'Custom Tag Text Color',
+      description: 'Optional text color for the custom tag badge.',
+      type: 'color',
+      hidden: ({ parent }) => !parent?.customTag
     }),
     defineField({
       name: 'shippingType',

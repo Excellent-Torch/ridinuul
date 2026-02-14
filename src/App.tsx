@@ -18,7 +18,7 @@ import { MagicCard } from "@/components/ui/magic-card";
 import { Marquee } from "@/components/ui/marquee";
 
 import { AnimatePresence, motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { categorizeProducts, calculateShippingTotal, getShippingLabel, hasAnyShippingFee } from './lib/utils';
+import { categorizeProducts, calculateShippingTotal, getDiscountedPrice, getShippingLabel, hasAnyShippingFee, isPriceCutDiscount } from './lib/utils';
 import TextAnimation from '@/components/ui/scroll-text';
 import RotatingText from '@/components/RotatingText';
 import WhatsAppChat from './components/ui/WhatsAppChat';
@@ -49,6 +49,12 @@ const REVIEWS = [
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', minimumFractionDigits: 0 }).format(price);
+
+const getEffectiveUnitPrice = (product: Pick<Product, 'price' | 'discountType' | 'discountValue'>) =>
+  getDiscountedPrice(product.price, product.discountType, product.discountValue);
+
+const hasPriceCut = (product: Pick<Product, 'discountType' | 'discountValue'>) =>
+  isPriceCutDiscount(product.discountType, product.discountValue);
 
 function App() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -227,7 +233,7 @@ function App() {
     setCart(prev => prev.map(item => item._id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item).filter(item => item.quantity > 0));
 
   // Cart calculations
-  const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartSubtotal = cart.reduce((sum, item) => sum + getEffectiveUnitPrice(item) * item.quantity, 0);
   const shippingTotal = useMemo(() => calculateShippingTotal(cart), [cart]);
   const cartTotal = cartSubtotal + shippingTotal;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -241,7 +247,11 @@ function App() {
     if (!grouped) return null;
     // Only apply numeric sorting for price grouping
     if (categorizeMethod === 'price') {
-      return Object.fromEntries(Object.entries(grouped).map(([label, items]) => [label, [...items].sort((a: any, b: any) => (sortOrder === 'asc' ? (a.price ?? 0) - (b.price ?? 0) : (b.price ?? 0) - (a.price ?? 0)))]));
+      return Object.fromEntries(Object.entries(grouped).map(([label, items]) => [label, [...items].sort((a: any, b: any) => {
+        const aPrice = getDiscountedPrice(a.price ?? 0, a.discountType, a.discountValue);
+        const bPrice = getDiscountedPrice(b.price ?? 0, b.discountType, b.discountValue);
+        return sortOrder === 'asc' ? aPrice - bPrice : bPrice - aPrice;
+      })]));
     }
     return grouped;
   }, [grouped, sortOrder, categorizeMethod]);
@@ -264,10 +274,11 @@ function App() {
     ];
     
     cartItems.forEach((item, index) => {
+      const itemUnitPrice = getEffectiveUnitPrice(item);
       let itemLine = `${index + 1}. ${item.name} × ${item.quantity}`;
       if (item.size) itemLine += ` (Size: ${item.size})`;
       if (item.color) itemLine += ` (Color: ${item.color})`;
-      itemLine += ` - ${formatPrice(item.price * item.quantity)}`;
+      itemLine += ` - ${formatPrice(itemUnitPrice * item.quantity)}`;
       lines.push(itemLine);
     });
     
@@ -405,6 +416,8 @@ function App() {
                   ) : (
                     <div className="space-y-4">
                       {cart.map(item => {
+                        const itemUnitPrice = getEffectiveUnitPrice(item);
+                        const itemHasDiscount = hasPriceCut(item);
                         const itemShippingFree = !item.shippingType || item.shippingType === 'free' || (item.shippingType === 'fixed' && !item.shippingFee);
                         return (
                           <div key={item._id} className="flex gap-3 p-3 bg-muted rounded-lg">
@@ -419,7 +432,14 @@ function App() {
                                 </p>
                               )}
                               <div className="flex items-center gap-2">
-                                <p className="text-primary font-semibold">{formatPrice(item.price)}</p>
+                                {itemHasDiscount ? (
+                                  <>
+                                    <p className="text-sm text-muted-foreground dark:text-white line-through">{formatPrice(item.price)}</p>
+                                    <p className="text-primary font-semibold">{formatPrice(itemUnitPrice)}</p>
+                                  </>
+                                ) : (
+                                  <p className="text-primary font-semibold">{formatPrice(itemUnitPrice)}</p>
+                                )}
                                 {itemShippingFree ? (
                                   <span className="text-xs text-orange-600 dark:text-orange-400">Free shipping</span>
                                 ) : (
@@ -772,8 +792,28 @@ function App() {
 
                 {/* Product Details */}
                 <div className="space-y-4">
-                  <Badge variant="outline">{selectedProduct.category}</Badge>
-                  <p className="text-3xl font-bold text-primary">{formatPrice(selectedProduct.price)}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline">{selectedProduct.category}</Badge>
+                    {selectedProduct.customTag && (
+                      <Badge
+                        style={{
+                          backgroundColor: selectedProduct.customTagBgColor || undefined,
+                          color: selectedProduct.customTagTextColor || undefined,
+                          borderColor: selectedProduct.customTagBgColor || undefined,
+                        }}
+                      >
+                        {selectedProduct.customTag}
+                      </Badge>
+                    )}
+                  </div>
+                  {hasPriceCut(selectedProduct) ? (
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg text-muted-foreground dark:text-white line-through">{formatPrice(selectedProduct.price)}</p>
+                      <p className="text-3xl font-bold text-primary">{formatPrice(getEffectiveUnitPrice(selectedProduct))}</p>
+                    </div>
+                  ) : (
+                    <p className="text-3xl font-bold text-primary">{formatPrice(getEffectiveUnitPrice(selectedProduct))}</p>
+                  )}
                   {/* Shipping Info */}
                   <div className="flex items-center gap-2">
                     <Badge 
@@ -871,7 +911,7 @@ function App() {
                                     disabled={selectedProduct.inStock === false || (SIZES.length > 0 && !selectedSize)}
                                     onClick={handleAddFromModal}
                   >
-                    {selectedProduct.inStock === false ? 'Out of Stock' : `Add to Cart - ${formatPrice(selectedProduct.price * quantity)}`}
+                    {selectedProduct.inStock === false ? 'Out of Stock' : `Add to Cart - ${formatPrice(getEffectiveUnitPrice(selectedProduct) * quantity)}`}
                   </Button>
                 </div>
               </div>
@@ -898,7 +938,7 @@ function App() {
                     {item.size && <span className="ml-1">(Size: {item.size})</span>}
                     {item.color && <span className="ml-1">(Color: {item.color})</span>}
                   </span>
-                  <span>{formatPrice(item.price * item.quantity)}</span>
+                  <span>{formatPrice(getEffectiveUnitPrice(item) * item.quantity)}</span>
                 </div>
               ))}
               <Separator className="my-2" />
@@ -1173,7 +1213,14 @@ function ProductImageGallery({
 
 function ProductCard({ product, onOpenModal }: { product: Product; onOpenModal: (p: Product) => void }) {
   const imageUrl = product.imageUrl || '/placeholder.jpg';
+  const productPrice = getEffectiveUnitPrice(product);
+  const productHasDiscount = hasPriceCut(product);
   const isFreeShipping = !product.shippingType || product.shippingType === 'free' || (product.shippingType === 'fixed' && !product.shippingFee);
+  const customTagStyle = {
+    backgroundColor: product.customTagBgColor || undefined,
+    color: product.customTagTextColor || undefined,
+    borderColor: product.customTagBgColor || undefined,
+  };
 
   return (
     <MagicCard className="overflow-hidden group cursor-pointer" onClick={() => onOpenModal(product)}>
@@ -1184,6 +1231,11 @@ function ProductCard({ product, onOpenModal }: { product: Product; onOpenModal: 
         {isFreeShipping && product.inStock !== false && (
           <Badge className="absolute top-2 left-2 bg-orange-500 hover:bg-orange-600 text-white text-xs">
             Free Shipping
+          </Badge>
+        )}
+        {product.customTag && product.inStock !== false && (
+          <Badge className={`absolute top-2 text-xs ${isFreeShipping ? 'right-2' : 'left-2'}`} style={customTagStyle}>
+            {product.customTag}
           </Badge>
         )}
       </div>
@@ -1199,7 +1251,12 @@ function ProductCard({ product, onOpenModal }: { product: Product; onOpenModal: 
         <h3 className="font-semibold line-clamp-1">{product.name}</h3>
         <p className="text-sm text-muted-foreground dark:text-white line-clamp-2 mt-1">{product.description}</p>
         <div className="flex items-center justify-between mt-4">
-          <span className="text-xl font-bold">{formatPrice(product.price)}</span>
+          <div className="flex items-center gap-2">
+            {productHasDiscount && (
+              <span className="text-sm text-muted-foreground dark:text-white line-through">{formatPrice(product.price)}</span>
+            )}
+            <span className="text-xl font-bold">{formatPrice(productPrice)}</span>
+          </div>
           <Button size="sm" disabled={product.inStock === false} onClick={(e) => { e.stopPropagation(); onOpenModal(product); }}>View</Button>
         </div>
       </CardContent>
