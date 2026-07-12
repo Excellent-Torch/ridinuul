@@ -110,6 +110,7 @@ function App() {
   const [quantity, setQuantity] = useState(1);
   const [recoloredImages, setRecoloredImages] = useState<Record<number, string>>({});
   const [recolorStatus, setRecolorStatus] = useState<LoadingStatus>('idle');
+  const [sizeError, setSizeError] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [categorizeMethod, setCategorizeMethod] = useState<'none' | 'price' | 'availability' | 'category'>('none');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -203,6 +204,7 @@ function App() {
     setRecoloredImages({});
     setRecolorStatus('idle');
     setCurrentImageIndex(0);
+    setSizeError(false);
   };
 
   const closeProductModal = () => {
@@ -213,6 +215,7 @@ function App() {
     setRecoloredImages({});
     setRecolorStatus('idle');
     setCurrentImageIndex(0);
+    setSizeError(false);
   };
 
   // Compute all product images for color selection
@@ -258,8 +261,7 @@ function App() {
   const handleAddFromModal = () => {
     if (!selectedProduct) return;
     if (SIZES.length > 0 && !selectedSize) {
-      // Inform the user to pick a size before adding
-      alert('Please select a size before adding to cart.');
+      setSizeError(true);
       return;
     }
     addToCart(selectedProduct, quantity, selectedSize, selectedColor);
@@ -442,9 +444,9 @@ function App() {
                   {cartCount > 0 && <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">{cartCount}</Badge>}
                 </Button>
               </SheetTrigger>
-              <SheetContent className="flex flex-col">
-                <SheetHeader><SheetTitle>Shopping Cart</SheetTitle></SheetHeader>
-                <div className="flex-1 overflow-y-auto py-4">
+              <SheetContent fullScreenMobile className="flex flex-col !max-w-full sm:!max-w-sm">
+                <SheetHeader className="px-0"><SheetTitle>Shopping Cart</SheetTitle></SheetHeader>
+                <div className="flex-1 overflow-y-auto py-4 px-0">
                   {cart.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground dark:text-white">
                       <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" />
@@ -497,7 +499,7 @@ function App() {
                   )}
                 </div>
                 {cart.length > 0 && (
-                  <SheetFooter className="flex-col gap-3 border-t pt-4">
+                  <SheetFooter className="flex-col gap-3 border-t pt-4 sticky bottom-0 bg-background pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] shadow-[0_-6px_12px_-3px_rgba(0,0,0,0.08)]">
                     {/* Order Summary */}
                     <div className="w-full space-y-1.5 text-sm">
                       <div className="flex items-center justify-between gap-2">
@@ -520,14 +522,15 @@ function App() {
                     <div className="w-full flex flex-col items-center gap-3">
                       <Button 
                         className="w-full" 
-                        size="default" 
+                        size="lg" 
                         onClick={handleCheckout}
                       >
                         Checkout
                       </Button>
                       <p className="text-sm text-muted-foreground dark:text-white">Or</p>
                       <Button 
-                        className="bg-green-600 hover:bg-green-700 text-white gap-2" 
+                        className="bg-green-600 hover:bg-green-700 text-white gap-2 w-full" 
+                        size="lg"
                         onClick={() => handleWhatsAppOrder(cart, cartTotal, shippingTotal)}
                         title="Order via WhatsApp"
                       >
@@ -874,25 +877,33 @@ function App() {
 
                   {/* Size Selection */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Size</label>
-                    <div className="flex flex-wrap gap-2">
+                    <label className="text-sm font-medium">
+                      Size <span className="text-destructive">*</span>
+                    </label>
+                    <div className={`flex flex-wrap gap-2 ${sizeError ? 'p-1 rounded-lg ring-2 ring-destructive' : ''}`}>
                       {SIZES.map(size => (
                         <Button
                           key={size}
                           variant={selectedSize === size ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => setSelectedSize(size)}
+                          onClick={() => { setSelectedSize(size); setSizeError(false); }}
                           className="min-w-[3rem]"
                         >
                           {size}
                         </Button>
                       ))}
                     </div>
+                    {sizeError && (
+                      <p className="text-destructive text-sm flex items-center gap-1">
+                        <span>⚠</span>
+                        <span>Please select a size before adding to cart.</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* Color Selection */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Color {recolorStatus === 'loading' && '(Loading AI...)'}</label>
+                    <label className="text-sm font-medium">Color <span className="text-muted-foreground font-normal">(Optional)</span> {recolorStatus === 'loading' && '(Loading AI...)'}</label>
                     <div className="flex flex-wrap gap-2">
                       {COLORS.map(color => (
                         <button
@@ -953,8 +964,8 @@ function App() {
                   <Button
                     size="lg"
                     className="w-full"
-                                    disabled={selectedProduct.inStock === false || (SIZES.length > 0 && !selectedSize)}
-                                    onClick={handleAddFromModal}
+                    disabled={selectedProduct.inStock === false}
+                    onClick={handleAddFromModal}
                   >
                     {selectedProduct.inStock === false ? 'Out of Stock' : `Add to Cart - ${formatPrice(getEffectiveUnitPrice(selectedProduct) * quantity)}`}
                   </Button>
@@ -967,12 +978,13 @@ function App() {
 
       {/* Checkout Form Modal */}
       <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto [&>button]:border [&>button]:border-input [&>button]:rounded-md [&>button]:p-1 [&>button]:hover:bg-muted">
-          <DialogHeader>
+        <DialogContent className="!left-0 !top-0 !translate-x-0 !translate-y-0 sm:!left-[50%] sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%] w-full h-[100dvh] max-h-[100dvh] !max-w-full sm:max-w-lg sm:h-auto sm:max-h-[90vh] flex flex-col [&>button]:border [&>button]:border-input [&>button]:rounded-md [&>button]:p-1 [&>button]:hover:bg-muted">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="text-2xl">Checkout</DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={handleCheckoutSubmit} className="space-y-4 mt-4">
+          <form onSubmit={handleCheckoutSubmit} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto space-y-4 mt-4 pr-1">
             {/* Order Summary */}
               <div className="bg-muted rounded-lg p-4 space-y-2">
               <h4 className="font-semibold text-sm">Order Summary</h4>
@@ -1089,33 +1101,36 @@ function App() {
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground dark:placeholder:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
+            </div>
 
-            <Separator />
-
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => setIsCheckoutOpen(false)}
-                disabled={isProcessingPayment}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={isProcessingPayment}
-              >
-                {isProcessingPayment ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  `Pay ${formatPrice(cartTotal)}`
-                )}
-              </Button>
+            {/* Action buttons footer */}
+            <div className="shrink-0 border-t pt-4 bg-background pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] shadow-[0_-6px_12px_-3px_rgba(0,0,0,0.08)]">
+              <Separator className="mb-4" />
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsCheckoutOpen(false)}
+                  disabled={isProcessingPayment}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={isProcessingPayment}
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Pay ${formatPrice(cartTotal)}`
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </DialogContent>

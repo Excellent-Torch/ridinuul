@@ -209,12 +209,12 @@ export default function WhatsAppChat({ product }: Props) {
       </div>
 
       <Dialog open={open} onOpenChange={(v) => { if (!v) closeChat(); }}>
-        <DialogContent className="w-[95vw] max-w-lg mx-auto rounded-lg shadow-2xl dark:shadow-[0_25px_50px_rgba(255,255,255,0.04)] border border-muted/10 bg-card overflow-hidden max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent className="!left-0 !top-0 !translate-x-0 !translate-y-0 sm:!left-[50%] sm:!top-[50%] sm:!translate-x-[-50%] sm:!translate-y-[-50%] w-full h-[100dvh] max-h-[100dvh] !max-w-full sm:max-w-lg sm:h-auto sm:max-h-[90vh] mx-auto sm:rounded-lg shadow-2xl dark:shadow-[0_25px_50px_rgba(255,255,255,0.04)] border border-muted/10 bg-card overflow-hidden flex flex-col !p-4 sm:!p-6">
+          <DialogHeader className="shrink-0">
             <DialogTitle>WhatsApp Order</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 mt-4 overflow-y-auto max-h-[calc(90vh-150px)]">
+          <div className="flex-1 overflow-y-auto space-y-4 mt-4 px-1">
             {/* Name Field */}
             <div className="space-y-2">
               <Label htmlFor="name">Your Name *</Label>
@@ -333,8 +333,10 @@ export default function WhatsAppChat({ product }: Props) {
               />
               <p className="text-xs text-muted-foreground dark:text-white">You can edit the message before sending to WhatsApp.</p>
             </div>
+          </div>
 
-            {/* Send Button */}
+          {/* Send Button footer */}
+          <div className="shrink-0 border-t pt-4 bg-card pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] shadow-[0_-6px_12px_-3px_rgba(0,0,0,0.08)]">
             <Button
               onClick={sendToWhatsApp}
               className="w-full bg-green-600 hover:bg-green-700 text-white"
